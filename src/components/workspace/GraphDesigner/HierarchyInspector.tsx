@@ -103,7 +103,7 @@ export function HierarchyInspector({
 
       <Field
         label="Hierarchy name"
-        hint="The TOML key for this hierarchy (e.g. `product`, `store`). Must match a SmartStudio dimension."
+        hint="The TOML key for this hierarchy (e.g. `product`, `store`). Must match a GraphStudio dimension."
         error={nameError}
       >
         <input
