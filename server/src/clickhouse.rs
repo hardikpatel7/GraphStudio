@@ -464,7 +464,7 @@ mod tests {
 
     #[test]
     fn write_access_guard_rejects_obvious_writes() {
-        let conn = ChConnection::from_config(&json!({"host": "h"})).unwrap();
+        let conn = ChConnection::from_config(&json!({"host": "h", "username": "default"})).unwrap();
         assert!(check_write_access(&conn, "INSERT INTO t VALUES (1)").is_err());
         assert!(check_write_access(&conn, "drop table foo").is_err());
         assert!(check_write_access(&conn, "  alter table foo add column x int").is_err());
@@ -473,13 +473,13 @@ mod tests {
 
     #[test]
     fn write_access_allowed_when_enabled() {
-        let conn = ChConnection::from_config(&json!({"host": "h", "allow_write_access": true})).unwrap();
+        let conn = ChConnection::from_config(&json!({"host": "h", "username": "default", "allow_write_access": true})).unwrap();
         assert!(check_write_access(&conn, "INSERT INTO t VALUES (1)").is_ok());
     }
 
     #[test]
     fn config_defaults() {
-        let conn = ChConnection::from_config(&json!({"host": "h.example.com"})).unwrap();
+        let conn = ChConnection::from_config(&json!({"host": "h.example.com", "username": "default"})).unwrap();
         assert_eq!(conn.port, 8123);
         assert_eq!(conn.username, "default");
         assert_eq!(conn.password, "");
@@ -495,8 +495,14 @@ mod tests {
     }
 
     #[test]
+    fn config_username_required() {
+        assert!(ChConnection::from_config(&json!({"host": "h"})).is_err());
+        assert!(ChConnection::from_config(&json!({"host": "h", "username": ""})).is_err());
+    }
+
+    #[test]
     fn base_url_uses_https_when_ssl() {
-        let conn = ChConnection::from_config(&json!({"host": "h", "ssl": true, "port": 8443})).unwrap();
+        let conn = ChConnection::from_config(&json!({"host": "h", "username": "default", "ssl": true, "port": 8443})).unwrap();
         assert_eq!(conn.base_url(), "https://h:8443");
     }
 }
