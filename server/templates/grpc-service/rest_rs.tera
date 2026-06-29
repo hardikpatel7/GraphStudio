@@ -1,4 +1,4 @@
-//! REST endpoints for SmartStudio test harness.
+//! REST endpoints for GraphStudio test harness.
 //! Thin wrapper that delegates to the same service implementation.
 
 use crate::proto;

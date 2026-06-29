@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use axum_test::TestServer;
 use tempfile::TempDir;
-use smartstudio_server::{
+use graphstudio_server::{
     agent, article_selection, db, trace_db, uam,
     AppState, build_router,
 };
@@ -29,9 +29,9 @@ enabled = false
     let toml_path = tmp.path().join("environment.toml");
     std::fs::write(&toml_path, toml).unwrap();
 
-    let cfg = smartstudio_server::instance_config::load(&toml_path).expect("load config");
-    let resolved = smartstudio_server::instance_config::resolve(cfg).expect("resolve config");
-    smartstudio_server::instance_config::ensure_ready(&resolved).expect("ensure_ready");
+    let cfg = graphstudio_server::instance_config::load(&toml_path).expect("load config");
+    let resolved = graphstudio_server::instance_config::resolve(cfg).expect("resolve config");
+    graphstudio_server::instance_config::ensure_ready(&resolved).expect("ensure_ready");
 
     let database = db::Database::open(&resolved.db_path).expect("open db");
     let traces = trace_db::TraceManager::new(&resolved.log_db_path);

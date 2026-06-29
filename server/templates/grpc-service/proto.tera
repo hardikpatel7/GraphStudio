@@ -1,7 +1,7 @@
 syntax = "proto3";
 package {{ package_name }};
 
-// Generated from SmartStudio DataView: {{ dataview_id }}
+// Generated from GraphStudio DataView: {{ dataview_id }}
 
 service {{ service_name }} {
   // List with filter, sort, search, paginate

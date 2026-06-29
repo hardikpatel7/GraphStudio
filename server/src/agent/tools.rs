@@ -319,7 +319,7 @@ impl Tool for ListDataviews {
     async fn definition(&self, _: String) -> ToolDefinition {
         ToolDefinition {
             name: Self::NAME.into(),
-            description: "List all DataViews in this SmartStudio tenant. Returns id, display_name and metadata for each. Use this first when the user asks about available data.".into(),
+            description: "List all DataViews in this GraphStudio tenant. Returns id, display_name and metadata for each. Use this first when the user asks about available data.".into(),
             parameters: json!({ "type": "object", "properties": {}, "additionalProperties": false }),
         }
     }
