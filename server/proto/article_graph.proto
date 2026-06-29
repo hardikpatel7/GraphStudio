@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+package article_graph;
+
+// V8 graph service. Backed by `crate::article_graph::ArticleGraph`,
+// an in-memory hierarchy graph published via `ArcSwapOption` after
+// every `pl_v8_build_graph` run (and, in a later phase, after every
+// CDC delta).
+//
+// The same graph powers two user-visible features:
+//   - "RCL Explorer" tab in SmartStudio (per-product rule trace)
+//   - filter → entity-list capability (subtree iteration, future)
+//
+// All RPCs are read-only and traverse the live snapshot
+// lock-free. If the graph hasn't been built yet, the service returns
+// `FAILED_PRECONDITION`.
+service ArticleGraphService {
+    // Resolve a product_code (or article) into its full hierarchy
+    // chain by walking parent pointers. Returns "(l0, l1, ..., l5,
+    // article, brand, channel)" — same shape the RCL resolver
+    // expects as input.
+    rpc MatchProduct(MatchProductRequest) returns (MatchProductResponse);
+
+    // Per-product RCL trace. Returns the matched (rcl_code,
+    // rule_code) for each of the three resolution flavors plus the
+    // resolved payload (DcPolicy fields / constraint rows / PSM
+    // identification). Backs the SmartStudio "RCL Explorer" tab.
+    rpc ResolveRcl(ResolveRclRequest) returns (ResolveRclResponse);
+
+    // Read pre-aggregated metrics at any node by (kind, name). E.g.
+    // (L1, "3510-LADIES FOOTWEAR") returns the rolled-up OH / OO /
+    // IT / lw_units / lw_revenue at that subtree's root. O(1) — node
+    // lookup + array read, no traversal.
+    rpc AggregateAt(AggregateAtRequest) returns (AggregateAtResponse);
+}
+
+// ── MatchProduct ──────────────────────────────────────────────────────
+
+message MatchProductRequest {
+    // Either product_code or article — the service will walk parent
+    // pointers from whichever it finds first.
+    oneof key {
+        string product_code = 1;
+        string article = 2;
+    }
+}
+
+message MatchProductResponse {
+    // Empty if the key wasn't found in the graph.
+    optional ProductHierarchy hierarchy = 1;
+}
+
+message ProductHierarchy {
+    string product_code = 1;
+    string article = 2;
+    string l0_name = 3;
+    string l1_name = 4;
+    string l2_name = 5;
+    string l3_name = 6;
+    string l4_name = 7;
+    string l5_name = 8;
+    string brand = 9;
+    string channel = 10;
+}
+
+// ── ResolveRcl ────────────────────────────────────────────────────────
+
+message ResolveRclRequest {
+    oneof key {
+        string product_code = 1;
+        string article = 2;
+    }
+    // Subset of resolutions to compute. Empty = all three.
+    repeated RuleKind kinds = 3;
+}
+
+enum RuleKind {
+    RULE_KIND_UNSPECIFIED = 0;
+    RULE_KIND_DC_POLICY = 1;
+    RULE_KIND_CONSTRAINTS = 2;
+    RULE_KIND_PSM = 3;
+}
+
+message ResolveRclResponse {
+    // The hierarchy that was used as input to the resolver — handy
+    // so callers can render the "what we matched against" view.
+    optional ProductHierarchy hierarchy = 1;
+    optional DcPolicyExplain dc_policy = 2;
+    optional ConstraintsExplain constraints = 3;
+    optional PsmExplain psm = 4;
+    // RuleSet version used for the resolution. Lets callers detect
+    // staleness if the ruleset updates between snapshots.
+    uint64 ruleset_version = 5;
+}
+
+message DcPolicyExplain {
+    string rcl_code = 1;
+    string rule_code = 2;
+    DcPolicy policy = 3;
+}
+
+message DcPolicy {
+    repeated string default_store_groups = 1;
+    string default_product_profile = 2;
+    string dc_store_rule = 3;
+}
+
+message ConstraintsExplain {
+    string rcl_code = 1;
+    string rule_code = 2;
+    repeated ConstraintRow rows = 3;
+}
+
+message ConstraintRow {
+    string psa_code = 1;
+    double aps = 2;
+    double wos = 3;
+    double min_stock = 4;
+    double max_stock = 5;
+}
+
+message PsmExplain {
+    string rcl_code = 1;
+    string rule_code = 2;
+}
+
+// ── AggregateAt ───────────────────────────────────────────────────────
+
+message AggregateAtRequest {
+    // Hierarchy level + name of the node to read.
+    NodeKind kind = 1;
+    string name = 2;
+}
+
+enum NodeKind {
+    NODE_KIND_UNSPECIFIED = 0;
+    NODE_KIND_L0 = 1;
+    NODE_KIND_L1 = 2;
+    NODE_KIND_L2 = 3;
+    NODE_KIND_L3 = 4;
+    NODE_KIND_L4 = 5;
+    NODE_KIND_L5 = 6;
+    NODE_KIND_ARTICLE = 7;
+    NODE_KIND_PRODUCT_CODE = 8;
+    NODE_KIND_CHANNEL = 9;
+    NODE_KIND_STORE_CODE = 10;
+}
+
+message AggregateAtResponse {
+    // Empty when (kind, name) doesn't resolve to a node.
+    optional Aggregates aggregates = 1;
+    uint64 graph_version = 2;
+}
+
+message Aggregates {
+    int64 oh = 1;
+    int64 oo = 2;
+    int64 it = 3;
+    int64 reserve_quantity = 4;
+    int64 allocated_units = 5;
+    int64 lw_units = 6;
+    int64 lw_revenue = 7;
+    int64 lw_margin = 8;
+}

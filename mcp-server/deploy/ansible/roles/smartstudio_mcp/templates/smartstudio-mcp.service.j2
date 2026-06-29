@@ -1,0 +1,32 @@
+[Unit]
+Description=SmartStudio MCP server (tenant {{ inventory_hostname }})
+After=network.target smartstudio.service
+Wants=smartstudio.service
+
+[Service]
+Type=simple
+User={{ mcp_user }}
+Group={{ mcp_group }}
+WorkingDirectory={{ mcp_current_link }}
+EnvironmentFile={{ mcp_etc_dir }}/env
+ExecStart={{ mcp_node_bin }} {{ mcp_current_link }}/dist/index-http.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=smartstudio-mcp
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+LockPersonality=true
+ReadWritePaths={{ mcp_log_dir }}
+
+[Install]
+WantedBy=multi-user.target

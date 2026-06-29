@@ -1,0 +1,64 @@
+// Smartstudio's article_selection Tonic service. Phase 3 of misty-hinton.
+//
+// Subset of inventory_backend_rust's `article_selection_v2` proto — only the
+// read-side RPCs (`GetList`, `GetFilterValues`). Refresh / SwapDuckDb /
+// CreateDuckDb live on the smartstudio HTTP/SSE pipeline path; this gRPC
+// surface is read-only.
+
+syntax = "proto3";
+
+package article_selection;
+
+service ArticleSelectionService {
+    rpc GetList(ArticleSelectionListRequest) returns (ArticleSelectionListResponse);
+    rpc GetFilterValues(FilterValuesRequest) returns (FilterValuesResponse);
+}
+
+message ArticleSelectionFilter {
+    string attribute_name = 1;
+    string operator = 2;             // "in" | "eq" | "contains" (Phase 3 supports "in" + "eq")
+    repeated string values = 3;
+}
+
+message SortField {
+    string column = 1;
+    string direction = 2;            // "asc" | "desc"
+}
+
+message ArticleSelectionListRequest {
+    repeated ArticleSelectionFilter filters = 1;
+    int64 limit = 2;
+    int64 offset = 3;
+    repeated SortField sort = 4;
+    string search = 5;
+}
+
+message ArticleSelectionRow {
+    // Same shape as the V4 service: rows are JSON-serialized so adding
+    // columns doesn't require a proto bump.
+    string data_json = 1;
+}
+
+message ArticleSelectionListResponse {
+    repeated ArticleSelectionRow rows = 1;
+    int64 total = 2;
+    Meta meta = 3;
+}
+
+message Meta {
+    int64 limit = 1;
+    int64 offset = 2;
+    int64 total = 3;
+    int64 page = 4;
+    int64 total_pages = 5;
+}
+
+message FilterValuesRequest {
+    string column = 1;
+    repeated ArticleSelectionFilter filters = 2;
+}
+
+message FilterValuesResponse {
+    repeated string data = 1;
+    int32 count = 2;
+}

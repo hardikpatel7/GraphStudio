@@ -1,0 +1,95 @@
+# Per-article WOC targets joined with hierarchy. 46,610 rows on bealls.
+id           = "dv_articles_over_woc"
+display_name = "Articles by Weeks of Cover"
+
+[source]
+source_id = "src_articles_woc"
+
+[[columns]]
+name = "article"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "ph_code"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "l1_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "l2_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "l3_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "brand"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "channel"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "woc"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "target"
+
+[[columns]]
+name = "min_woc"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "target"
+
+[[columns]]
+name = "max_woc"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "target"
+
+[[columns]]
+name = "avg_max_mod"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "target"
+
+[[columns]]
+name = "woc_mapped_stores_count"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "scope"

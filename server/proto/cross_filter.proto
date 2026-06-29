@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package cross_filter;
+
+// Graph-backed cross-filter. Mirrors the contract of
+// `inventory-smart-rust`'s `POST /cross-filter-v2` route so callers can
+// switch backends behind an env flag.
+//
+// Two RPCs:
+//   - CrossFilter: filter set + requested attributes → distinct values
+//     per attribute. Backed by `crate::cross_filter::resolver` walking
+//     the live `ArticleGraph` snapshot.
+//   - GetEntitlements: (user_code, acl_code) → resolved entitled set
+//     summary. Used by the UAM Explorer DataView.
+service CrossFilterService {
+    rpc CrossFilter(CrossFilterRequest) returns (CrossFilterResponse);
+    rpc GetEntitlements(GetEntitlementsRequest) returns (GetEntitlementsResponse);
+}
+
+// ── CrossFilter ────────────────────────────────────────────────────────
+
+message CrossFilterRequest {
+    repeated Attribute attributes = 1;
+    repeated Filter filters = 2;
+    // When true, the response is intersected with the (user_code,
+    // acl_code) entitled set from `UamStore`. Both must be set if so.
+    bool is_urm_filter = 3;
+    optional int32 user_code = 4;
+    optional int32 acl_code = 5;
+    // Filter type — Cascaded vs NonCascaded — currently advisory.
+    optional string filter_type = 6;
+}
+
+message Attribute {
+    string attribute_name = 1;
+    string dimension = 2;
+}
+
+message Filter {
+    string attribute_name = 1;
+    optional string dimension = 2;
+    repeated string values = 3;
+    // "in" | "eq" | "ne" | "in_eq". Defaults to "in".
+    string operator = 4;
+}
+
+message CrossFilterResponse {
+    // Per attribute_name → sorted distinct values. Mirrors the
+    // FilterResponse.data shape upstream.
+    map<string, AttributeValues> data = 1;
+    int32 count = 2;
+    bool status = 3;
+    string message = 4;
+}
+
+message AttributeValues {
+    repeated string values = 1;
+}
+
+// ── GetEntitlements ────────────────────────────────────────────────────
+
+message GetEntitlementsRequest {
+    int32 user_code = 1;
+    int32 acl_code = 2;
+}
+
+message GetEntitlementsResponse {
+    bool found = 1;
+    // True when the row had empty filters (= unrestricted access).
+    bool unrestricted = 2;
+    int32 article_count = 3;
+    int32 store_count = 4;
+    int32 raw_filter_count = 5;
+    // Sample of entitled article ids (capped server-side).
+    repeated string sample_articles = 6;
+}

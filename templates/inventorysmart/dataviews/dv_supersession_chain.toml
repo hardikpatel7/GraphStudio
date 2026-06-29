@@ -1,0 +1,112 @@
+# Article-supersession chain. One row per (old_article → new_article)
+# edge with priority and an active-window date range. Multiple successors
+# can exist for the same old_article (priority orders them); follow the
+# chain by joining new_article back to old_article in this same view.
+id           = "dv_supersession_chain"
+display_name = "Product Supersession Chain"
+
+[source]
+source_id = "src_supersession_chain"
+
+[[columns]]
+name = "ps_code"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "old_article"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "old_product_code"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "new_article"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "new_product_code"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "priority"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "ordering"
+
+[[columns]]
+name = "start_date"
+type = "DATE"
+sortable = true
+visible = true
+group = "window"
+
+[[columns]]
+name = "end_date"
+type = "DATE"
+sortable = true
+visible = true
+group = "window"
+
+# Derived in source SQL — true when CURRENT_DATE falls inside the window.
+[[columns]]
+name = "is_active"
+type = "BOOLEAN"
+sortable = true
+visible = true
+group = "signal"
+
+[[columns]]
+name = "has_store_exception"
+type = "BOOLEAN"
+sortable = true
+visible = true
+group = "signal"
+
+[[columns]]
+name = "updated_by"
+type = "VARCHAR"
+sortable = true
+visible = false
+group = "audit"
+
+[[columns]]
+name = "updated_at"
+type = "TIMESTAMP"
+sortable = true
+visible = true
+group = "audit"
+
+[[columns]]
+name = "created_by"
+type = "VARCHAR"
+sortable = true
+visible = false
+group = "audit"
+
+[[columns]]
+name = "created_at"
+type = "TIMESTAMP"
+sortable = true
+visible = false
+group = "audit"

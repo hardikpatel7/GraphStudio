@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: smartstudio_mcp
+  namespace: smartstudio
+  author: SmartStudio
+  description: Deploys the smartstudio-mcp service alongside an existing SmartStudio install.
+  company: Impact Analytics
+  license: proprietary
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - smartstudio
+    - mcp
+    - claude
+dependencies: []

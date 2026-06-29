@@ -1,0 +1,29 @@
+# Pack-configuration for articles — defines which packs (case, inner,
+# eaches…) the article ships in, sized by `units_in_pack`. The
+# allocator must respect these as a hard constraint: an allocated
+# quantity has to be expressible as a sum of available pack sizes
+# (case multiples, inner multiples, etc.). `parent_article` lets
+# variant SKUs roll up to a master article for pack-sharing.
+#
+# Backs dv_pack_constraints. Closes "what packs does article N ship
+# in?" / "which articles ship in cases of 24" / "packsize-driven
+# rounding gap" prompts.
+id             = "src_pack_constraints"
+display_name   = "DC Pack Configurations (live PG)"
+kind           = "pg_query"
+connection_ref = "uat"
+
+[config]
+sql = """
+SELECT
+  article,
+  parent_article,
+  product_code,
+  size,
+  pack_type_id,
+  pack_type,
+  pack_description,
+  pack_size,
+  units_in_pack
+FROM inventory_smart.dc_pack_configuration
+"""

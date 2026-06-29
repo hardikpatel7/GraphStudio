@@ -1,0 +1,6 @@
+# Active SKUs with zero last-week sales. 34,484 rows on bealls (74% of
+# catalog). Backs dv_zero_sale_active_products.
+id           = "src_zero_sale_active_products"
+display_name = "Zero-sale Active Products (last week)"
+kind         = "duckdb_table"
+target_table = "v_zero_sale_active_products"

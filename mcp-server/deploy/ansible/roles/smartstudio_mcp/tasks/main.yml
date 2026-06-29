@@ -1,0 +1,167 @@
+---
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - mcp_auth_token | length >= 16
+      - mcp_artifact_url | length > 0
+    fail_msg: "mcp_auth_token (>=16 chars) and mcp_artifact_url must be provided. Use an AWX vault credential for the token."
+    quiet: true
+
+- name: Ensure service group
+  ansible.builtin.group:
+    name: "{{ mcp_group }}"
+    system: true
+
+- name: Ensure service user
+  ansible.builtin.user:
+    name: "{{ mcp_user }}"
+    group: "{{ mcp_group }}"
+    system: true
+    home: "{{ mcp_install_root }}"
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Ensure runtime directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ mcp_user }}"
+    group: "{{ mcp_group }}"
+    mode: "0755"
+  loop:
+    - "{{ mcp_install_root }}"
+    - "{{ mcp_log_dir }}"
+
+- name: Ensure config directory
+  ansible.builtin.file:
+    path: "{{ mcp_etc_dir }}"
+    state: directory
+    owner: root
+    group: "{{ mcp_group }}"
+    mode: "0750"
+
+- name: Ensure Node is available
+  ansible.builtin.stat:
+    path: "{{ mcp_node_bin }}"
+  register: mcp_node_stat
+
+- name: Fail if Node is missing
+  ansible.builtin.fail:
+    msg: "Node not found at {{ mcp_node_bin }}. Install it before running this role (NodeSource, snap, or apt nodejs)."
+  when: not mcp_node_stat.stat.exists
+
+- name: Check if version already installed
+  ansible.builtin.stat:
+    path: "{{ mcp_install_dir }}/dist/index-http.js"
+  register: mcp_already_installed
+
+- name: Install the versioned release
+  when: not mcp_already_installed.stat.exists
+  block:
+    - name: Ensure versioned install dir
+      ansible.builtin.file:
+        path: "{{ mcp_install_dir }}"
+        state: directory
+        owner: "{{ mcp_user }}"
+        group: "{{ mcp_group }}"
+        mode: "0755"
+
+    - name: Download release tarball
+      ansible.builtin.get_url:
+        url: "{{ mcp_artifact_url }}"
+        dest: "/tmp/smartstudio-mcp-{{ mcp_version }}.tar.gz"
+        mode: "0640"
+        checksum: "{{ mcp_artifact_checksum | default(omit, true) }}"
+        force: false
+
+    - name: Extract tarball into versioned dir
+      ansible.builtin.unarchive:
+        src: "/tmp/smartstudio-mcp-{{ mcp_version }}.tar.gz"
+        dest: "{{ mcp_install_dir }}"
+        remote_src: true
+        owner: "{{ mcp_user }}"
+        group: "{{ mcp_group }}"
+        extra_opts:
+          - "--strip-components=1"
+
+    - name: Remove downloaded tarball
+      ansible.builtin.file:
+        path: "/tmp/smartstudio-mcp-{{ mcp_version }}.tar.gz"
+        state: absent
+
+- name: Atomically point `current` at this version
+  ansible.builtin.file:
+    src: "{{ mcp_install_dir }}"
+    dest: "{{ mcp_current_link }}"
+    state: link
+    force: true
+    owner: "{{ mcp_user }}"
+    group: "{{ mcp_group }}"
+  notify: restart smartstudio-mcp
+
+- name: Template env file (contains the auth token)
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ mcp_etc_dir }}/env"
+    owner: root
+    group: "{{ mcp_group }}"
+    mode: "0640"
+  notify: restart smartstudio-mcp
+  no_log: true
+
+- name: Template systemd unit
+  ansible.builtin.template:
+    src: smartstudio-mcp.service.j2
+    dest: /etc/systemd/system/smartstudio-mcp.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - systemd daemon-reload
+    - restart smartstudio-mcp
+
+- name: Flush handlers (apply systemd + service changes before health check)
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable + start smartstudio-mcp
+  ansible.builtin.systemd:
+    name: smartstudio-mcp
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for healthz
+  ansible.builtin.uri:
+    url: "http://{{ mcp_host }}:{{ mcp_port }}/healthz"
+    status_code: 200
+    return_content: true
+  register: mcp_health
+  retries: 15
+  delay: 2
+  until: mcp_health.status == 200
+
+- name: Report MCP health
+  ansible.builtin.debug:
+    msg: "MCP up. SmartStudio backend status: {{ (mcp_health.content | from_json).smartstudio }}"
+
+- name: Manage nginx integration
+  when: mcp_manage_nginx
+  block:
+    - name: Template nginx snippet
+      ansible.builtin.template:
+        src: nginx-smartstudio-mcp.conf.j2
+        dest: /etc/nginx/snippets/smartstudio-mcp.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: reload nginx
+
+    - name: Ensure tenant site includes the MCP snippet
+      ansible.builtin.blockinfile:
+        path: "{{ mcp_nginx_site_path }}"
+        marker: "    # {mark} ANSIBLE smartstudio-mcp"
+        insertbefore: '^\s*}\s*$'
+        block: |
+          include /etc/nginx/snippets/smartstudio-mcp.conf;
+        validate: "nginx -t -c /etc/nginx/nginx.conf"
+      notify: reload nginx

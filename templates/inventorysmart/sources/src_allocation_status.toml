@@ -1,0 +1,54 @@
+# Allocation workflow status — per-run lifecycle state across Gurobi auto-runs.
+# Each row carries the allocation_code (from src_allocation_split_po), the
+# current status, when it transitioned, and the number of articles in the
+# run. `payload` is a free-form text blob (often JSON) holding run metadata.
+#
+# `tb_allocation_status` (manual runs) and `dc_review_recommendation` are
+# empty on bealls UAT today — only `tb_auto_allocation_status` carries data.
+# When those tables populate, expand this source to UNION across all three
+# or add sibling sources.
+#
+# Backs dv_allocation_status. Closes prompts F1 (pending approval > 24h),
+# F2 (locked plan status), F3 (proposed vs finalized diff via allocation_code
+# joined with src_allocation_split_po).
+id             = "src_allocation_status"
+display_name   = "Allocation Status (auto runs, live PG)"
+kind           = "pg_query"
+connection_ref = "uat"
+
+[config]
+# Triple-single-quote is a TOML literal string — escapes pass through
+# verbatim, so the SQL's regex `[0-9]{8}T?[0-9]{6}` lands at PG exactly as
+# typed. With a basic (double-quote) string we'd have to write `\\d` and
+# remember TOML's escape rules.
+sql = '''
+SELECT
+  allocation_code,
+  status,
+  status_time,
+  number_articles,
+  remarks,
+  -- Each row is a phase event ("Start"/"End"/"Failed") within a run,
+  -- not the run's overall state. Surface `is_terminal` so consumers
+  -- can quickly distinguish "the run definitely ended" from "phase
+  -- started" without re-encoding the status vocabulary.
+  (status IN ('End', 'Failed')) AS is_terminal,
+  -- run_started_at is parsed from allocation_code so consumers can sort
+  -- and bucket by run identity even when status_time is missing.
+  -- Two formats are observed:
+  --   `..._YYYYMMDDHHMMSS[_LX]`  (e.g. ..._20260514171001, ..._20260507123506_L1)
+  --   `..._YYYYMMDDTHHMMSS`      (e.g. ..._20260514T125659)
+  -- The regex is *anchored* — `_<digits>(_L<digits>)?$` — to avoid
+  -- capturing interior digit runs (article IDs etc.) that happen to be
+  -- 14 long but aren't timestamps. Without the anchor we hit codes like
+  -- `_12345678_1099999_..._L1` and built bogus "year 1234, hour 10:99:99"
+  -- inputs that PG rejected with 22008.
+  CASE
+    WHEN SUBSTRING(allocation_code FROM '_([0-9]{8}T?[0-9]{6})(_L[0-9]+)?$') IS NOT NULL
+    THEN to_timestamp(
+      REPLACE(SUBSTRING(allocation_code FROM '_([0-9]{8}T?[0-9]{6})(_L[0-9]+)?$'), 'T', ''),
+      'YYYYMMDDHH24MISS'
+    )
+  END AS run_started_at
+FROM inventory_smart.tb_auto_allocation_status
+'''

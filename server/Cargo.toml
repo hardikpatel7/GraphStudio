@@ -1,0 +1,132 @@
+[package]
+name = "smartstudio-server"
+version = "0.1.0"
+edition = "2021"
+
+# Whole-program optimization for release builds. fat LTO + a single
+# codegen unit lets the optimizer see across crate boundaries (e.g.
+# inline DuckDB FFI wrappers, devirtualize trait calls in the rayon
+# row-builders). Trades roughly 3x release-build time for 5-15% on
+# hot paths. CPU-architecture-neutral — same win on any target.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[dependencies]
+# Web framework
+axum = { version = "0.8", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "fs", "trace"] }
+
+# Async
+tokio = { version = "1", features = ["full"] }
+
+# Database
+rusqlite = { version = "0.32", features = ["bundled"] }
+duckdb = { version = "1.4.3", features = ["bundled", "appender-arrow"] }
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4", "with-serde_json-1"] }
+pgwire-replication = "0.3"
+
+# Streaming
+futures = "0.3"
+tokio-stream = { version = "0.1", features = ["sync"] }
+tokio-util = "0.7"
+
+# Time
+chrono = "0.4"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# `preserve_order` makes `toml::Value::Table` an IndexMap (declaration order),
+# which lets our graph-spec deserializer hand keys back to serde in source
+# order. Critical for `[hierarchy.<name>.<level>]` and `[metrics.<src>]`
+# blocks where the TOML key sequence IS the data (top-to-leaf ordering).
+toml = { version = "0.8", features = ["preserve_order"] }
+# Order-preserving map used in `graph_v2::spec` for the same reason.
+indexmap = { version = "2", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Concurrency
+crossbeam = "0.8"
+
+# HTTP client (for gRPC/REST pipeline calls)
+reqwest = { version = "0.12", features = ["json"] }
+
+# Fast PG → Arrow → DuckDB materialization
+connectorx = { version = "0.4", default-features = false, features = ["fptr", "src_postgres", "dst_arrow2"] }
+arrow2 = { version = "0.17", default-features = false, features = ["io_parquet", "io_parquet_zstd", "io_parquet_snappy"] }
+
+# Pipeline (lifted to rust-shared-utils, consumed via git)
+pipeline = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# PG connection pool. Used by smartstudio at boot to register one named
+# pool per row in the `connections` table; the pipeline crate then uses
+# `pg::get_named_connection(...)` for every COPY/extract.
+pg = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# `pg::initialize_named_pool` takes an `app_config::database::DatabaseConfig`.
+app-config = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4", features = ["secret-manager"] }
+deadpool-postgres = "0.14"
+
+# RCL resolution (rust-shared-utils, consumed via git). Pure Rust crate;
+# the Tonic gRPC wrapper lives in this server (server/src/services/rcl_grpc.rs).
+rcl = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+
+# CDC streaming (rust-shared-utils). PG WAL → DuckDB mirror runtime.
+# Lifted from the in-tree server/src/cdc/ (now removed); consumed via git.
+cdc = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+
+# GCP Secret Manager (rust-shared-utils). The agent uses this at boot
+# to pull LLM API keys (OPENAI_API_KEY, ANTHROPIC_API_KEY) out of a
+# JSON-payload secret and load them into the process env, where Rig's
+# `openai::Client::from_env()` / `anthropic::Client::from_env()` then
+# pick them up. Configured via `[agent]` in environment.toml. Local
+# dev can leave that section unset and export the keys in the shell.
+secret_manager = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+
+# gRPC (Tonic server for the RCL service)
+tonic = "0.12"
+prost = "0.13"
+async-stream = "0.3"
+
+# Parallel iteration for the article-selection materializer
+rayon = "1.10"
+
+# article_graph (V8) — small inline vectors for node children + lock-free
+# snapshot-publish for the in-process graph store.
+smallvec = "1.13"
+arc-swap = "1.7"
+
+# Utils
+anyhow = "1"
+base64 = "0.22"
+tera = "1.20.1"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Agent / LLM
+# rig-core: multi-provider LLM client (OpenAI v1, Anthropic & others later).
+# The agent module's `llm` facade keeps Rig contained in one backend file
+# (agent/llm.rs::rig_backend) so breaking changes localize. Exact-pinned
+# because rig's pre-1.0 cadence means any minor bump needs a manual review.
+# Imported as `rig` to match upstream examples and docs.
+rig = { package = "rig-core", version = "=0.37.0" }
+# In-memory LRU cache for idempotent tool results (`list_dataviews`,
+# `describe_dataview`, ...). Wrapped in a Mutex inside the `agent::cache`
+# module — low contention, no need for moka.
+lru = "=0.18.0"
+async-trait = "0.1"
+
+[build-dependencies]
+tonic-build = "0.12"
+
+# # Local development override for the `pipeline` crate. Lets us iterate on
+# # `rust-shared-utils/pipeline` without a push round-trip. Remove (or comment
+# # out) before publishing — once the pipeline changes are pushed to
+# # `develop/dev-v4`, the git dep above will pick them up directly.
+# [patch."ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git"]
+# pipeline = { path = "../../rust-shared-utils/pipeline" }
+# pg = { path = "../../rust-shared-utils/pg" }
+# app-config = { path = "../../rust-shared-utils/config" }
+# rcl = { path = "../../rust-shared-utils/rcl" }

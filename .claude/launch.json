@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vite",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": ["/opt/homebrew/bin/npx", "vite", "--port", "5173"],
+      "env": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"},
+      "port": 5173
+    },
+    {
+      "name": "explainer",
+      "runtimeExecutable": "/opt/homebrew/bin/npx",
+      "runtimeArgs": ["-y", "http-server", "docs", "-p", "4599", "-c-1", "--silent"],
+      "env": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"},
+      "port": 4599
+    }
+  ]
+}

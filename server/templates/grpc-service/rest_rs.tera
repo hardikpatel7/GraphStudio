@@ -1,0 +1,73 @@
+//! REST endpoints for SmartStudio test harness.
+//! Thin wrapper that delegates to the same service implementation.
+
+use crate::proto;
+use crate::service::{{ service_impl_name }};
+use axum::{extract::State, routing::post, Json, Router};
+use serde_json::{json, Value};
+use std::sync::Arc;
+use tonic::Request;
+use tower_http::cors::CorsLayer;
+
+pub fn router(svc: Arc<{{ service_impl_name }}>) -> Router {
+    Router::new()
+        .route("/list", post(list_handler))
+        .route("/filter-values", post(filter_values_handler))
+        .route("/health", axum::routing::get(|| async { Json(json!({"status": "ok", "service": "{{ package_name }}"})) }))
+        .layer(CorsLayer::permissive())
+        .with_state(svc)
+}
+
+async fn list_handler(
+    State(svc): State<Arc<{{ service_impl_name }}>>,
+    Json(body): Json<Value>,
+) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
+    let req = proto::ListRequest {
+        filters: parse_filters(&body["filters"]),
+        sort_column: body["sort_column"].as_str().unwrap_or("").to_string(),
+        sort_direction: body["sort_direction"].as_str().unwrap_or("ASC").to_string(),
+        search: body["search"].as_str().unwrap_or("").to_string(),
+        limit: body["limit"].as_i64().unwrap_or(100),
+        offset: body["offset"].as_i64().unwrap_or(0),
+    };
+
+    use proto::{{ server_module }}::{{ service_name }};
+    let resp = svc.get_list(Request::new(req)).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.message()}))))?;
+
+    let inner = resp.into_inner();
+    let rows: Vec<Value> = inner.rows.into_iter().map(|r| json!({
+{% for col in columns %}        "{{ col.name }}": r.{{ col.name }},
+{% endfor %}    })).collect();
+
+    Ok(Json(json!({ "rows": rows, "total": inner.total, "status": inner.status })))
+}
+
+async fn filter_values_handler(
+    State(svc): State<Arc<{{ service_impl_name }}>>,
+    Json(body): Json<Value>,
+) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
+    let req = proto::FilterValuesRequest {
+        column: body["column"].as_str().unwrap_or("").to_string(),
+        filters: parse_filters(&body["filters"]),
+    };
+
+    use proto::{{ server_module }}::{{ service_name }};
+    let resp = svc.get_filter_values(Request::new(req)).await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.message()}))))?;
+
+    let inner = resp.into_inner();
+    Ok(Json(json!({ "values": inner.values, "count": inner.count })))
+}
+
+fn parse_filters(val: &Value) -> Vec<proto::Filter> {
+    val.as_array().map(|arr| {
+        arr.iter().filter_map(|f| {
+            Some(proto::Filter {
+                column: f["column"].as_str()?.to_string(),
+                operator: f["operator"].as_str().unwrap_or("in").to_string(),
+                values: f["values"].as_array().map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect()).unwrap_or_default(),
+            })
+        }).collect()
+    }).unwrap_or_default()
+}

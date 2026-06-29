@@ -1,0 +1,41 @@
+# RCL rule registry (joined view of raw_rcl_psm_*). 109 rows on bealls.
+id           = "dv_rcl_rules"
+display_name = "RCL Rules"
+
+[source]
+source_id = "src_rcl_rules"
+
+[[columns]]
+name = "rcl_code"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "rule_code"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "priority"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "priority"
+
+[[columns]]
+name = "eligible_psa_count"
+type = "BIGINT"
+sortable = true
+visible = true
+group = "scope"
+
+[[columns]]
+name = "dim_json"
+type = "VARCHAR"
+sortable = false
+visible = true
+group = "definition"

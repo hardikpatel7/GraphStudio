@@ -1,0 +1,31 @@
+# Per-(article, store) state surfaced live from PG. Carries per-store
+# OH/OO/IT, multi-week sales (lw/l4w/l8w), region, country, full WOS
+# triangle, sell-through, and 7 alert flags. brand joined in via
+# alerts_product_level (LEFT JOIN; ~1.3k articles have no entry there →
+# brand=NULL). Backs dv_alerts_product_store.
+id             = "src_alerts_product_store"
+display_name   = "Per-Store Article State (live PG)"
+kind           = "pg_query"
+connection_ref = "uat"
+
+[config]
+sql = """
+SELECT apss.article, apss.store_code, apss.s0_name, apss.country, apss.region,
+       apss.l1_name, apss.l2_name, apss.l3_name, apss.season, apss.launch_date,
+       apss.clearance, apss.price, apss.msrp, apss.discount,
+       apss.oh, apss.oo, apss.it, apss.total_inv, apss.allocated_units,
+       apss.in_stock, apss.in_stock_ata, apss.ata, apss.dc_instock,
+       apss.lw_units, apss.lw_revenue, apss.lw_margin,
+       apss.l4w_units, apss.l4w_revenue, apss.l8w_units,
+       apss.wos_oh, apss.wos_oh_oo, apss.wos_oh_oo_it, apss.sell_through_perc,
+       apss.stockout, apss.shortfall, apss.excess, apss.normal,
+       apss.cfc_age_weeks,
+       apss.overstock_most_stores_alert, apss.shortfall_most_stores_alert,
+       apss.stockout_most_stores_alert,
+       apss.cfc_age_gt_5_alert, apss.cfc_age_gt_10_alert, apss.cfc_age_gt_20_alert,
+       apl.brand
+FROM inventory_smart.alerts_product_store_level apss
+LEFT JOIN (SELECT DISTINCT article, brand
+           FROM inventory_smart.alerts_product_level) apl
+  ON apl.article = apss.article
+"""

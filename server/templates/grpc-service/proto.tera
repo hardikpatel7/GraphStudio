@@ -1,0 +1,51 @@
+syntax = "proto3";
+package {{ package_name }};
+
+// Generated from SmartStudio DataView: {{ dataview_id }}
+
+service {{ service_name }} {
+  // List with filter, sort, search, paginate
+  rpc GetList(ListRequest) returns (ListResponse);
+  // Get distinct values for a column (for cascading filters)
+  rpc GetFilterValues(FilterValuesRequest) returns (FilterValuesResponse);
+}
+
+// ── Request/Response ──
+
+message ListRequest {
+  repeated Filter filters = 1;
+  string sort_column = 2;
+  string sort_direction = 3;
+  string search = 4;
+  int64 limit = 5;
+  int64 offset = 6;
+}
+
+message ListResponse {
+  repeated Row rows = 1;
+  int64 total = 2;
+  bool status = 3;
+}
+
+message FilterValuesRequest {
+  string column = 1;
+  repeated Filter filters = 2;
+}
+
+message FilterValuesResponse {
+  repeated string values = 1;
+  int64 count = 2;
+}
+
+// ── Shared types ──
+
+message Filter {
+  string column = 1;
+  string operator = 2;  // "in", "eq", "not_in", "like"
+  repeated string values = 3;
+}
+
+// Row — fields from DataView columns
+message Row {
+{% for col in columns %}  {{ col.proto_type }} {{ col.name }} = {{ col.field_number }};
+{% endfor %}}
