@@ -122,7 +122,7 @@ export function WorkspaceLayout({ tenantId, identity, workspace }: WorkspaceLayo
         {/* Left */}
         <div className="flex items-center gap-3">
           <span className="text-blue-500 font-semibold text-sm tracking-wide">
-            SmartStudio
+            GraphStudio
           </span>
           <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-900/60 text-green-400 leading-none">
             {identity.environment}

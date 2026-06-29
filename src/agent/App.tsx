@@ -261,7 +261,7 @@ function Header(props: {
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-sm">
           <Sparkles className="w-4 h-4" />
         </div>
-        <h1 className="text-base font-semibold tracking-tight text-slate-900">SmartStudio Agent</h1>
+        <h1 className="text-base font-semibold tracking-tight text-slate-900">GraphStudio Agent</h1>
       </div>
       {(props.activeWs || props.activeSession) && (
         <button

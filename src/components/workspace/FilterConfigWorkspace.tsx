@@ -13,7 +13,7 @@ interface FilterColumn {
 
 /// Suggest filter columns for the given dimension. Sources, in order:
 ///   1. The dimension's `levels[].column` + `additional_filter_cols`
-///      from the SmartStudio `dimensions` table (authoritative if the
+///      from the GraphStudio `dimensions` table (authoritative if the
 ///      tenant has dimensions configured).
 ///   2. Defaults for the canonical dimensions ("product" / "store"):
 ///      hierarchy levels + brand + channel for product;
