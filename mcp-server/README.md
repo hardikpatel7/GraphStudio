@@ -34,7 +34,7 @@ Add to `~/.claude.json` (or project-scoped `.mcp.json` at SmartStudio repo root)
   "mcpServers": {
     "smartstudio": {
       "command": "node",
-      "args": ["/Users/karthickpachiappan/bb/smartstudio/mcp-server/dist/index.js"],
+      "args": ["/path/to/GraphStudio/mcp-server/dist/index.js"],
       "env": { "SMARTSTUDIO_URL": "http://localhost:3001" }
     }
   }

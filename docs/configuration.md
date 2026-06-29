@@ -150,12 +150,12 @@ Remove (or set to `false`) before the next start.
 
 ## 6. Examples
 
-### 6.1 Single-host development (current Bealls dev tenant)
+### 6.1 Single-host development
 
 ```toml
-home_path   = "/Users/karthickpachiappan"
+home_path   = "/path/to/your/data"
 environment = "dev"
-client      = "bealls"
+client      = "mycompany"
 app_type    = "inventorysmart"
 
 [server]
@@ -167,7 +167,7 @@ enabled       = true
 port_override = 5433
 ```
 
-Resolves to `/Users/karthickpachiappan/smartstudio/bealls-inventorysmart-dev/data/`,
+Resolves to `/path/to/your/data/smartstudio/mycompany-inventorysmart-dev/data/`,
 HTTP on 3002, gRPC on 50051, RCL service ON pointing at PG on port 5433.
 
 ### 6.2 Production: tenant data on a dedicated SSD

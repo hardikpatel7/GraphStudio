@@ -6,13 +6,13 @@
 # absolute path that already exists — the server will not create it. The server will
 # create <home_path>/smartstudio/ if missing. Each tenant gets a subfolder named
 # "<client>-<app_type>-<environment>" under <home_path>/smartstudio/.
-home_path = "/Users/karthickpachiappan"
+home_path = "/path/to/your/data"
 
 # Instance identity — required. tenant_id is auto-derived as
 # "<client>-<app_type>-<environment>" (e.g., "bealls-inventorysmart-dev").
-environment = "dev"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "mycompany"
+app_type    = "myproduct"
+environment = "demo"
 
 # Bootstrap assertion. Optional. Must match reality:
 #   - true  → tenant folder must NOT yet exist; server creates it.

@@ -679,7 +679,7 @@ add_text(slide, Inches(1.2), Inches(5.8), Inches(6), Inches(0.4),
 
 
 # Save
-out_path = "/Users/karthickpachiappan/bb/smartstudio/docs/SmartStudio_Engineering_Deck.pptx"
+out_path = "GraphStudio_Engineering_Deck.pptx"
 prs.save(out_path)
 print(f"Saved: {out_path}")
 print(f"Slides: {len(prs.slides)}")

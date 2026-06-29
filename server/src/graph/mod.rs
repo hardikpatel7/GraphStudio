@@ -10,7 +10,7 @@
 //!     metadata engine covers them. Slated for deletion once that
 //!     migration lands.
 //!
-//! Plan: `/Users/karthickpachiappan/.claude/plans/buzzing-weaving-lemur.md`.
+//! See `docs/v1-cleanup-todo.md` for migration status.
 
 pub mod spec;
 pub mod graph;
