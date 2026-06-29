@@ -354,3 +354,14 @@ fn copy_dir_files(src: &Path, dst: &Path) -> std::io::Result<usize> {
     }
     Ok(n)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Canary: NAMESPACE_DIR == "smartstudio". Turns RED when renamed.
+    #[test]
+    fn namespace_dir_is_smartstudio() {
+        assert_eq!(NAMESPACE_DIR, "smartstudio");
+    }
+}

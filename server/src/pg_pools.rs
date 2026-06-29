@@ -24,7 +24,7 @@ use app_config::database::DatabaseConfig;
 /// Default pool size: number of logical CPUs the process can use,
 /// respecting cgroup limits on Linux. Falls back to 4 on the rare
 /// error path. Override via env var `SMARTSTUDIO_PG_MAX_CONCURRENCY`.
-fn default_max_size() -> usize {
+pub(crate) fn default_max_size() -> usize {
     if let Ok(v) = std::env::var("SMARTSTUDIO_PG_MAX_CONCURRENCY") {
         if let Ok(n) = v.parse::<usize>() {
             if n > 0 {
@@ -146,5 +146,17 @@ pub async fn refresh_one(state: &AppState, connection_id: &str) {
         tracing::warn!(connection = %connection_id, error = %e, "[pg-pool] refresh failed");
     } else {
         tracing::info!(connection = %connection_id, "[pg-pool] refreshed");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// Canary: pg pool reads SMARTSTUDIO_PG_MAX_CONCURRENCY. Stays GREEN (not renamed).
+    #[test]
+    fn pg_max_concurrency_env_var_name() {
+        std::env::set_var("SMARTSTUDIO_PG_MAX_CONCURRENCY", "7");
+        let result = super::default_max_size();
+        std::env::remove_var("SMARTSTUDIO_PG_MAX_CONCURRENCY");
+        assert_eq!(result, 7);
     }
 }

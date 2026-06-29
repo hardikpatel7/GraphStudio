@@ -210,3 +210,14 @@ fn parity_legacy_vs_spec_root_metric_sums_and_kind_counts() {
         );
     }
 }
+
+mod canary_tests {
+    /// Canary: env_duckdb_path reads SMARTSTUDIO_BEALLS_DUCKDB. Stays GREEN (not renamed).
+    #[test]
+    fn bealls_duckdb_env_var_name() {
+        std::env::set_var("SMARTSTUDIO_BEALLS_DUCKDB", "/tmp/canary_test.duckdb");
+        let result = super::env_duckdb_path();
+        std::env::remove_var("SMARTSTUDIO_BEALLS_DUCKDB");
+        assert_eq!(result, Some("/tmp/canary_test.duckdb".to_string()));
+    }
+}
