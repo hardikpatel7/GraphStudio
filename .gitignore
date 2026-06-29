@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+server/target/
+
+# Tenant runtime data — lives under <home>/smartstudio/<tenant_id>/data/
+# at runtime. The repo's data/ folder is fully untracked EXCEPT the
+# `demo` tenant under data/agent/demo/, which ships with the repo as
+# a pre-seeded sandbox for the /agent.html entry point. We persist
+# only the SQLite `.db` files (the durable state); WAL / SHM are
+# ephemeral and recreated on open. Checkpoint the demo DB with
+# `sqlite3 ... "PRAGMA wal_checkpoint(TRUNCATE);"` before committing
+# so the .db file is self-contained.
+data/*
+!data/agent/
+data/agent/*
+!data/agent/demo/
+data/agent/demo/*
+!data/agent/demo/*.db
+*.duckdb
+*.duckdb-wal
+*.duckdb-shm
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment / secrets
+.env
+.env.local
+
+*.secret.json
+
+# MCP — per-dev local config (template lives at mcp-server/.mcp.json.example)
+.mcp.json
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Lock files (regenerated)
+
+server/generated-services/**/
+target/*
+
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+docs/**/*.pdf
+docs/smartstudio-explainer.html
+environment.*.toml
+---
+beauty-brands-treemap.html

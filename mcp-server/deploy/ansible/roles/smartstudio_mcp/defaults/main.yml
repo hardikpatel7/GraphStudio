@@ -1,0 +1,40 @@
+---
+# === Version + paths ===
+mcp_version: "0.1.0"
+mcp_install_root: /opt/smartstudio-mcp
+mcp_install_dir: "{{ mcp_install_root }}/{{ mcp_version }}"
+mcp_current_link: "{{ mcp_install_root }}/current"
+mcp_etc_dir: /etc/smartstudio-mcp
+mcp_log_dir: /var/log/smartstudio-mcp
+
+# === Service identity ===
+mcp_user: smartstudio
+mcp_group: smartstudio
+
+# === Network ===
+mcp_host: 127.0.0.1
+mcp_port: 3101
+mcp_smartstudio_url: "http://127.0.0.1:3001"
+
+# === Runtime ===
+mcp_node_bin: /usr/bin/node
+
+# === Release artifact (override per environment) ===
+# Expected layout inside the tarball (after strip-components=1):
+#   ./package.json
+#   ./package-lock.json
+#   ./node_modules/        (production only)
+#   ./dist/                (compiled JS)
+mcp_artifact_url: "https://artifacts.example.com/smartstudio-mcp/smartstudio-mcp-{{ mcp_version }}.tar.gz"
+mcp_artifact_checksum: ""   # e.g. "sha256:abc123..." — strongly recommended
+
+# === Nginx integration ===
+# True: write our snippet into /etc/nginx/snippets/ AND insert the `include`
+# directive into the SmartStudio tenant site (idempotent, marker-fenced).
+# False: just write the snippet — site owner adds the include themselves.
+mcp_manage_nginx: true
+mcp_nginx_site_path: /etc/nginx/sites-available/smartstudio
+
+# === Secrets (provide via AWX vault credentials) ===
+# Long random hex; generate with `openssl rand -hex 32`. NEVER commit a real value.
+mcp_auth_token: ""

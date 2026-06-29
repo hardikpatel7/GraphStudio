@@ -1,0 +1,6 @@
+# Per-store-group rollup of sales + stockout signal. 25 active groups on
+# bealls. Backs dv_store_group_performance.
+id           = "src_store_group_performance"
+display_name = "Store Group Performance (last week)"
+kind         = "duckdb_table"
+target_table = "v_store_group_performance"

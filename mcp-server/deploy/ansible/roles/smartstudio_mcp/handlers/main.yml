@@ -1,0 +1,14 @@
+---
+- name: systemd daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: restart smartstudio-mcp
+  ansible.builtin.systemd:
+    name: smartstudio-mcp
+    state: restarted
+
+- name: reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded

@@ -1,0 +1,49 @@
+home_path   = "/Users/hardiksavaliya/Documents/windsurf projects "
+environment = "demo"
+client      = "briscoes"
+app_type    = "inventorysmart"
+is_new      = false
+
+[server]
+port      = 3001
+grpc_port = 50051
+
+[rcl]
+enabled       = true
+# RCL tables + the rcl_changed NOTIFY triggers live on this PG instance
+# (typically a read-replica / MV server on the same host).
+port_override = 5432
+
+
+[graphs]
+# Default graph snapshot reached for by handlers that need "the" graph
+# (e.g. /api/cross-filter) without a per-request id. Must match the
+# `id` field of a row in the `graphs` SQLite table — confirm with
+# `GET /api/graphs`.
+default_id = "briscoes-inventory-graph"
+
+
+[paths]
+# Optional per-artifact overrides. Anything you omit falls back to the
+# home-relative default at `home_path/GraphStudio/{tenant_id}/data/...`.
+# Useful for putting individual artifacts on different volumes (e.g.
+# parquet on a shared lake, SQLite on local disk).
+
+[agent]
+# GCP Secret Manager pointer for LLM API keys. The named secret's
+# payload is a JSON object exported into the process env at boot —
+# Rig's clients then pick them up via the standard convention.
+#
+# Env vars used by Rig (must be present at boot):
+#   OPENAI_API_KEY     — read by `rig::providers::openai::Client::from_env`
+#   ANTHROPIC_API_KEY  — read by the Anthropic backend when enabled
+#
+# Expected secret payload:
+#   { "OPENAI_API_KEY": "sk-...", "ANTHROPIC_API_KEY": "sk-ant-..." }
+#
+# Leave the two fields below unset for local dev — the server will
+# silently skip Secret Manager and assume the keys are already in the
+# shell env (e.g. via `export` or `.env`).
+# gcp_project_id     = "clients-poc-08082025"
+# llm_secret_name    = "smartstudio_agent"
+# llm_secret_version = 1   # optional pin; default = "latest"

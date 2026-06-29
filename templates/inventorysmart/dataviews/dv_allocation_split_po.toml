@@ -1,0 +1,226 @@
+# Per-(article, store) allocation results from the latest Gurobi run.
+# Carries source-DC labeling (inventory_source, source) and quantities
+# (demand, allocated_total, oh/oo/it, wos) so the planner can answer
+# "where are allocations coming from?", "which POs cover which stockouts?",
+# and "DC vs cross-ship mix per store/category?"
+id           = "dv_allocation_split_po"
+display_name = "Allocation Results (split-PO)"
+
+[source]
+source_id = "src_allocation_split_po"
+
+[[columns]]
+name = "article"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "store"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "store_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "store"
+
+[[columns]]
+name = "store_grade"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "store"
+
+[[columns]]
+name = "inventory_source"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "source"
+
+[[columns]]
+name = "source"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "source"
+
+[[columns]]
+name = "allocation_code"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "source"
+
+[[columns]]
+name = "allocation_strategy"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "source"
+
+[[columns]]
+name = "order_type"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "source"
+
+[[columns]]
+name = "demand"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "quantity"
+
+[[columns]]
+name = "allocated_total"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "quantity"
+
+[[columns]]
+name = "allocated_total_orig"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "quantity"
+
+[[columns]]
+name = "min"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "target"
+
+[[columns]]
+name = "max"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "target"
+
+[[columns]]
+name = "oh"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "oo"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "it"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "oh_oo_intransit"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "inventory"
+
+[[columns]]
+name = "final_inv_available"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "inventory"
+
+[[columns]]
+name = "wos"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "cover"
+
+[[columns]]
+name = "wk_count_final"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "cover"
+
+[[columns]]
+name = "ros"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "velocity"
+
+[[columns]]
+name = "aps"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "velocity"
+
+[[columns]]
+name = "status"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "workflow"
+
+[[columns]]
+name = "is_edited"
+type = "BOOLEAN"
+sortable = true
+visible = true
+group = "workflow"
+
+[[columns]]
+name = "is_scenario"
+type = "BOOLEAN"
+sortable = true
+visible = false
+group = "workflow"
+
+[[columns]]
+name = "delivery_dt"
+type = "TIMESTAMP"
+sortable = true
+visible = true
+group = "workflow"
+
+[[columns]]
+name = "updated_at"
+type = "TIMESTAMP"
+sortable = true
+visible = true
+group = "workflow"
+
+[[columns]]
+name = "created_by_username"
+type = "VARCHAR"
+sortable = true
+visible = false
+group = "workflow"
+
+[[columns]]
+name = "updated_by_username"
+type = "VARCHAR"
+sortable = true
+visible = false
+group = "workflow"

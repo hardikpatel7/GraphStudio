@@ -1,0 +1,26 @@
+# SmartStudio instance config. Copy this file to `environment.toml` and edit.
+# The server requires `environment.toml` at startup (next to the binary, in the project
+# root, or in the cwd) and exits if it's missing.
+
+# Base directory under which the smartstudio/ namespace lives. Required. Must be an
+# absolute path that already exists — the server will not create it. The server will
+# create <home_path>/smartstudio/ if missing. Each tenant gets a subfolder named
+# "<client>-<app_type>-<environment>" under <home_path>/smartstudio/.
+home_path = "/Users/karthickpachiappan"
+
+# Instance identity — required. tenant_id is auto-derived as
+# "<client>-<app_type>-<environment>" (e.g., "bealls-inventorysmart-dev").
+environment = "dev"
+client      = "bealls"
+app_type    = "inventorysmart"
+
+# Bootstrap assertion. Optional. Must match reality:
+#   - true  → tenant folder must NOT yet exist; server creates it.
+#   - unset → tenant folder must already exist; server opens it.
+# Mismatch in either direction is an error. Remove this line after the first successful
+# boot of a new tenant.
+is_new = true
+
+# Optional server settings.
+[server]
+port = 3001

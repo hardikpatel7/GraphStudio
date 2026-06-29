@@ -1,0 +1,18 @@
+---
+# Example playbook for AWX. Save this in your inventory repo, not in
+# the mcp-server repo. The role itself lives under
+# deploy/ansible/roles/smartstudio_mcp/ inside the smartstudio-mcp release
+# (or symlink it into your roles_path).
+
+- name: Deploy smartstudio-mcp
+  hosts: smartstudio_tenants
+  become: true
+  vars:
+    # Override these from AWX job-template extra_vars / survey:
+    mcp_version: "0.1.0"
+    mcp_artifact_url: "https://artifacts.internal/smartstudio-mcp/smartstudio-mcp-{{ mcp_version }}.tar.gz"
+    mcp_artifact_checksum: "sha256:REPLACE-ME"
+    mcp_smartstudio_url: "http://127.0.0.1:3001"
+    # mcp_auth_token comes from an AWX vault credential — never inline it.
+  roles:
+    - role: smartstudio_mcp

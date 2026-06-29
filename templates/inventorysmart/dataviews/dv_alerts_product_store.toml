@@ -1,0 +1,328 @@
+# Per-(article, store) state (live PG). 44 cols incl. per-store OH, multi-week sales, region, brand.
+id           = "dv_alerts_product_store"
+display_name = "Per-Store Article State"
+
+[source]
+source_id = "src_alerts_product_store"
+
+[[columns]]
+name = "article"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "store_code"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "region"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "store"
+
+[[columns]]
+name = "country"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "store"
+
+[[columns]]
+name = "s0_name"
+type = "VARCHAR"
+sortable = true
+visible = false
+group = "store"
+
+[[columns]]
+name = "l1_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "l2_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "l3_name"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = false
+group = "hierarchy"
+
+[[columns]]
+name = "season"
+type = "VARCHAR"
+sortable = true
+visible = false
+group = "metadata"
+
+[[columns]]
+name = "launch_date"
+type = "DATE"
+sortable = true
+visible = false
+group = "metadata"
+
+[[columns]]
+name = "clearance"
+type = "BOOLEAN"
+sortable = true
+visible = true
+group = "metadata"
+
+[[columns]]
+name = "oh"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "oo"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "it"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "total_inv"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "allocated_units"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "in_stock"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "inventory"
+
+[[columns]]
+name = "in_stock_ata"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "inventory"
+
+[[columns]]
+name = "ata"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "inventory"
+
+[[columns]]
+name = "dc_instock"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "inventory"
+
+[[columns]]
+name = "lw_units"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "sales"
+
+[[columns]]
+name = "lw_revenue"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "sales"
+
+[[columns]]
+name = "lw_margin"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "sales"
+
+[[columns]]
+name = "l4w_units"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "sales"
+
+[[columns]]
+name = "l4w_revenue"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "sales"
+
+[[columns]]
+name = "l8w_units"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "sales"
+
+[[columns]]
+name = "price"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "price"
+
+[[columns]]
+name = "msrp"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "price"
+
+[[columns]]
+name = "discount"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "price"
+
+[[columns]]
+name = "wos_oh"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "cover"
+
+[[columns]]
+name = "wos_oh_oo"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "cover"
+
+[[columns]]
+name = "wos_oh_oo_it"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "cover"
+
+[[columns]]
+name = "sell_through_perc"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "cover"
+
+[[columns]]
+name = "stockout"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "state"
+
+[[columns]]
+name = "shortfall"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "state"
+
+[[columns]]
+name = "excess"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "state"
+
+[[columns]]
+name = "normal"
+type = "DOUBLE"
+sortable = true
+visible = false
+group = "state"
+
+[[columns]]
+name = "cfc_age_weeks"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "alert"
+
+[[columns]]
+name = "overstock_most_stores_alert"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "alert"
+
+[[columns]]
+name = "shortfall_most_stores_alert"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "alert"
+
+[[columns]]
+name = "stockout_most_stores_alert"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "alert"
+
+[[columns]]
+name = "cfc_age_gt_5_alert"
+type = "INTEGER"
+sortable = true
+visible = false
+group = "alert"
+
+[[columns]]
+name = "cfc_age_gt_10_alert"
+type = "INTEGER"
+sortable = true
+visible = false
+group = "alert"
+
+[[columns]]
+name = "cfc_age_gt_20_alert"
+type = "INTEGER"
+sortable = true
+visible = false
+group = "alert"
+
+[[columns]]
+name = "brand"
+type = "VARCHAR"
+sortable = true
+searchable = true
+visible = true
+group = "hierarchy"

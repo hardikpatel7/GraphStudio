@@ -1,0 +1,34 @@
+[Unit]
+Description=SmartStudio MCP server
+Documentation=https://github.com/anthropics/claude-code
+After=network.target smartstudio.service
+Wants=smartstudio.service
+
+[Service]
+Type=simple
+User=smartstudio
+Group=smartstudio
+WorkingDirectory=/opt/smartstudio-mcp/current
+EnvironmentFile=/etc/smartstudio-mcp/env
+ExecStart=/usr/bin/node /opt/smartstudio-mcp/current/dist/index-http.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=smartstudio-mcp
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+LockPersonality=true
+ReadWritePaths=/var/log/smartstudio-mcp
+
+[Install]
+WantedBy=multi-user.target
