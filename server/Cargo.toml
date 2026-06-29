@@ -3,6 +3,10 @@ name = "smartstudio-server"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "smartstudio_server"
+path = "src/lib.rs"
+
 # Whole-program optimization for release builds. fat LTO + a single
 # codegen unit lets the optimizer see across crate boundaries (e.g.
 # inline DuckDB FFI wrappers, devirtualize trait calls in the rayon
