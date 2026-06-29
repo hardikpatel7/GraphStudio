@@ -368,7 +368,8 @@ oh = { rollup = "sum" }
         let opts = ProjectionOptions { include_metrics: true, ..Default::default() };
         let row = project(&g, l0_a, &opts);
         // L0_A = A1.oh + A2.oh = 10 + 25 = 35 after rollup.
+        // "oh" is the only metric so it wins the bare name (no collision).
         let metrics = row["metrics"].as_object().unwrap();
-        assert_eq!(metrics["inv.oh"], json!(35.0));
+        assert_eq!(metrics["oh"], json!(35.0));
     }
 }
