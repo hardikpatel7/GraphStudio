@@ -1,49 +1,45 @@
 mod common;
 
-/// Canary: bundle export filename contains "smartstudio-bundle-".
-/// Stays GREEN — bundle filename is NOT renamed.
-/// The handler requires at least one selected object to produce a 200;
-/// when the DB is empty we fall back to asserting the literal string
-/// exists in the source file (which is equally load-bearing for the rename
-/// guard — if someone renames the constant the source assertion fires).
+/// Canary: bundle export `Content-Disposition` header contains "smartstudio-bundle-".
+/// Stays GREEN — bundle filename prefix is NOT renamed.
+/// Seeds a DataView so the export endpoint returns 200 (it requires at least
+/// one selected object).
 #[tokio::test]
 async fn bundle_export_content_disposition_contains_smartstudio_bundle() {
     let (server, _tmp) = common::setup_server().await;
 
-    // Try the live endpoint first — POST with a well-formed body that
-    // selects at least one object. In an empty test DB this returns 400
-    // ("no objects selected"), so we handle both outcomes.
+    // Seed a DataView so the bundle export has something to export.
+    let create = server
+        .post("/dataviews")
+        .json(&serde_json::json!({
+            "id": "bundle-canary-dv",
+            "display_name": "Bundle Canary"
+        }))
+        .await;
+    create.assert_status(axum::http::StatusCode::CREATED);
+
+    // POST to the live bundle export endpoint selecting the seeded DataView.
     let resp = server
         .post("/bundle/export")
-        .json(&serde_json::json!({ "kinds": {} }))
+        .json(&serde_json::json!({
+            "kinds": {
+                "dataviews": ["bundle-canary-dv"]
+            }
+        }))
         .await;
 
-    let status = resp.status_code();
-    if status.is_success() {
-        // Live path: check the Content-Disposition header.
-        let cd = resp
-            .headers()
-            .get("content-disposition")
-            .expect("missing Content-Disposition header")
-            .to_str()
-            .expect("non-ASCII Content-Disposition");
-        assert!(
-            cd.contains("smartstudio-bundle-"),
-            "Content-Disposition does not contain 'smartstudio-bundle-': {cd}"
-        );
-    } else {
-        // Fallback: assert the literal string lives in the handler source.
-        // This fires if someone renames the bundle filename prefix.
-        let src = std::fs::read_to_string(
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("src/handlers/bundle.rs"),
-        )
-        .expect("could not read src/handlers/bundle.rs");
-        assert!(
-            src.contains("smartstudio-bundle-"),
-            "src/handlers/bundle.rs does not contain 'smartstudio-bundle-'"
-        );
-    }
+    resp.assert_status_ok();
+
+    let cd = resp
+        .headers()
+        .get("content-disposition")
+        .expect("missing Content-Disposition header")
+        .to_str()
+        .expect("non-ASCII Content-Disposition");
+    assert!(
+        cd.contains("smartstudio-bundle-"),
+        "Content-Disposition does not contain 'smartstudio-bundle-': {cd}"
+    );
 }
 
 /// Canary: resolved db_path ends with "smartstudio.db".
