@@ -21,7 +21,7 @@ export const listSourcesTool = defineTool({
   destructive: false,
   inputSchema: input,
   description: [
-    "Return every source registered in SmartStudio. A source is a named",
+    "Return every source registered in GraphStudio. A source is a named",
     "feed that backs an analytical table — each one has a `kind` describing",
     "how it produces data (pg_query, duckdb_query, etc.), a `target_table`",
     "(when populated, the DuckDB table to query), and a `status` indicating",

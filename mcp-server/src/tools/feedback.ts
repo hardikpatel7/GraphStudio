@@ -44,7 +44,7 @@ const input = z
         "Optional. The LLM's suggestion for what would have made this easier — a new endpoint, a column to add to DuckDB, a metric on a graph, etc."
       ),
   })
-  .describe("A structured feedback entry to file against SmartStudio's roadmap.");
+  .describe("A structured feedback entry to file against GraphStudio's roadmap.");
 
 interface CreateResponse {
   id: string;
@@ -53,13 +53,13 @@ interface CreateResponse {
 
 export const submitFeedbackTool = defineTool({
   name: "submit_feedback",
-  title: "File a feedback entry against SmartStudio",
+  title: "File a feedback entry against GraphStudio",
   destructive: false,
   inputSchema: input,
   description: [
     "Record a structured note about something the LLM couldn't answer cleanly,",
     "or answered only via a painful path. The developer reviews these to decide",
-    "what SmartStudio capability to build next — so this is the LLM's primary",
+    "what GraphStudio capability to build next — so this is the LLM's primary",
     "channel for shaping the backlog.",
     "",
     "WHEN TO CALL:",

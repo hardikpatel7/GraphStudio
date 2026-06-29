@@ -29,7 +29,7 @@ interface QueryResponse {
   rows: Array<Record<string, unknown>>;
   columns: Array<{ name: string }>;
   total: number;
-  // `duration_ms` is the smartstudio-side wall-clock for the full
+  // `duration_ms` is the graphstudio-side wall-clock for the full
   // /api/connections/:id/run roundtrip (auth + HTTP + parse +
   // count-query). `client_ms` is just the CH HTTP call from the
   // smartstudio server's perspective (subset of duration_ms).
@@ -99,7 +99,7 @@ export const clickhouseQueryTool = defineTool({
     "    questions that don't fit a pre-built DataView.",
     "",
     "TIMING:",
-    "  - `duration_ms` is the full smartstudio-side wall-clock for the",
+    "  - `duration_ms` is the full graphstudio-side wall-clock for the",
     "    request (HTTP roundtrip + CH execution + JSON decode).",
     "  - `server_ms` is what ClickHouse itself reports (from",
     "    X-ClickHouse-Summary.elapsed_ns); subtracting it from",

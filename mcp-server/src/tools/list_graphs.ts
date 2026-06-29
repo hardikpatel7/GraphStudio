@@ -15,11 +15,11 @@ interface GraphRow {
 
 export const listGraphsTool = defineTool({
   name: "list_graphs",
-  title: "List graphs available on SmartStudio",
+  title: "List graphs available on GraphStudio",
   destructive: false,
   inputSchema: input,
   description: [
-    "Return every graph defined on this SmartStudio instance.",
+    "Return every graph defined on this GraphStudio instance.",
     "",
     "A graph is an in-memory, traversal-optimized index over the underlying",
     "analytical tables. Each graph defines its own hierarchies (e.g., product",

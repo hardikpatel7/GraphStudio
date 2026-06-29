@@ -51,7 +51,7 @@ export const describeDataViewTool = defineTool({
     "actual rows, prefer `dataview_read` over composing SQL by hand.",
     "",
     "INPUT: { id }.",
-    "RETURNS: full dataview row (verbatim from SmartStudio).",
+    "RETURNS: full dataview row (verbatim from GraphStudio).",
   ].join("\n"),
   async execute(raw) {
     const { id } = input.parse(raw ?? {});

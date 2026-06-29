@@ -19,7 +19,7 @@ export const materializeTool = defineTool({
   destructive: true,
   inputSchema: input,
   description: [
-    "Run SmartStudio's article-selection materializer.",
+    "Run GraphStudio's article-selection materializer.",
     "",
     "Reads from the default PostgreSQL connection, resolves the in-process RCL ruleset,",
     "and writes 46 columns into tenant_data.duckdb::article_selection. This is what every",

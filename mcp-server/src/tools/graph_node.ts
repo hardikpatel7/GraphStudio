@@ -85,7 +85,7 @@ export const graphNodeTool = defineTool({
     "",
     "Errors:",
     "  - 404 \"graph not built\" — call describe_graph to confirm; build is a",
-    "    SmartStudio operation, not an MCP one.",
+    "    GraphStudio operation, not an MCP one.",
     "  - 400 \"unknown kind\" — kind isn't in the registry; check describe_graph.",
     "  - 404 \"node not found\" — name doesn't match. The graph indexes exact",
     "    strings, so check spelling / case before retrying.",
