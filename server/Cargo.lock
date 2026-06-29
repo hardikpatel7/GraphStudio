@@ -1935,6 +1935,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "graphstudio-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "app-config",
+ "arc-swap",
+ "arrow2",
+ "async-stream",
+ "async-trait",
+ "axum 0.8.9",
+ "axum-test",
+ "base64 0.22.1",
+ "cdc",
+ "chrono",
+ "connectorx",
+ "crossbeam",
+ "deadpool-postgres",
+ "duckdb",
+ "futures",
+ "indexmap 2.14.0",
+ "lru",
+ "pg",
+ "pgwire-replication",
+ "pipeline",
+ "prost",
+ "rayon",
+ "rcl",
+ "reqwest 0.12.28",
+ "rig-core",
+ "rusqlite",
+ "secret_manager",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "tempfile",
+ "tera",
+ "tokio",
+ "tokio-postgres",
+ "tokio-stream",
+ "tokio-util",
+ "toml 0.8.23",
+ "tonic 0.12.3",
+ "tonic-build",
+ "tower 0.5.3",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.23.1",
+]
+
+[[package]]
 name = "h2"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5051,57 +5102,6 @@ dependencies = [
  "autocfg",
  "static_assertions",
  "version_check",
-]
-
-[[package]]
-name = "smartstudio-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "app-config",
- "arc-swap",
- "arrow2",
- "async-stream",
- "async-trait",
- "axum 0.8.9",
- "axum-test",
- "base64 0.22.1",
- "cdc",
- "chrono",
- "connectorx",
- "crossbeam",
- "deadpool-postgres",
- "duckdb",
- "futures",
- "indexmap 2.14.0",
- "lru",
- "pg",
- "pgwire-replication",
- "pipeline",
- "prost",
- "rayon",
- "rcl",
- "reqwest 0.12.28",
- "rig-core",
- "rusqlite",
- "secret_manager",
- "serde",
- "serde_json",
- "smallvec",
- "tempfile",
- "tera",
- "tokio",
- "tokio-postgres",
- "tokio-stream",
- "tokio-util",
- "toml 0.8.23",
- "tonic 0.12.3",
- "tonic-build",
- "tower 0.5.3",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid 1.23.1",
 ]
 
 [[package]]
