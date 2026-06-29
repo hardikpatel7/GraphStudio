@@ -20,7 +20,7 @@ export const listDataViewsTool = defineTool({
   destructive: false,
   inputSchema: input,
   description: [
-    "Return every dataview registered in SmartStudio. A dataview is a",
+    "Return every dataview registered in GraphStudio. A dataview is a",
     "shaped, contract-bound table view — it lists the columns the planner",
     "will see, plus a contract describing how the data is served (gRPC",
     "engine, cache strategy, allowed operations) and any cascading filter",

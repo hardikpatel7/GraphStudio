@@ -8,7 +8,7 @@ const input = z
       .string()
       .min(1)
       .describe(
-        "Filter config id (e.g. 'fc_877c14152bf9'). Filter configs live in SmartStudio's metadata — `duckdb_query(\"SELECT id, display_name, dimension_ref FROM filter_configs\")` if you need to discover one."
+        "Filter config id (e.g. 'fc_877c14152bf9'). Filter configs live in GraphStudio's metadata — `duckdb_query(\"SELECT id, display_name, dimension_ref FROM filter_configs\")` if you need to discover one."
       ),
     context: z
       .record(z.array(z.string()))

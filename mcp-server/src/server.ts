@@ -13,7 +13,7 @@ import { HttpError } from "./http.js";
  */
 export function createMcpServer(): Server {
   const server = new Server(
-    { name: "smartstudio-mcp", version: "0.1.0" },
+    { name: "graphstudio-mcp", version: "0.1.0" },
     { capabilities: { tools: {} } }
   );
 

@@ -13,7 +13,7 @@ const AUTH_TOKEN = process.env.MCP_AUTH_TOKEN ?? "";
 
 if (AUTH_TOKEN.length < 16) {
   process.stderr.write(
-    "[smartstudio-mcp] FATAL: MCP_AUTH_TOKEN env var is required (min 16 chars).\n"
+    "[graphstudio-mcp] FATAL: MCP_AUTH_TOKEN env var is required (min 16 chars).\n"
   );
   process.exit(1);
 }
@@ -34,7 +34,7 @@ const app = express();
 app.use(express.json({ limit: "1mb" }));
 
 // Health probe — intentionally no auth so the load balancer and systemd
-// can call it. Reports SmartStudio reachability so a degraded backend
+// can call it. Reports GraphStudio reachability so a degraded backend
 // shows up as a degraded MCP.
 app.get("/healthz", async (_req: Request, res: Response) => {
   let ss: "ok" | "degraded" | "unreachable" = "unreachable";
@@ -44,7 +44,7 @@ app.get("/healthz", async (_req: Request, res: Response) => {
   } catch {
     ss = "unreachable";
   }
-  res.json({ ok: true, smartstudio: ss, tools: TOOLS.length, version: "0.1.0" });
+  res.json({ ok: true, graphstudio: ss, tools: TOOLS.length, version: "0.1.0" });
 });
 
 // Bearer-token gate on the MCP endpoint.
@@ -86,12 +86,12 @@ app.all("/mcp", async (req: Request, res: Response) => {
 
 const listener = app.listen(PORT, HOST, () => {
   process.stderr.write(
-    `[smartstudio-mcp] http listening on ${HOST}:${PORT}. SMARTSTUDIO_URL=${http.baseUrl}. ${TOOLS.length} tools.\n`
+    `[graphstudio-mcp] http listening on ${HOST}:${PORT}. SMARTSTUDIO_URL=${http.baseUrl}. ${TOOLS.length} tools.\n`
   );
 });
 
 function shutdown(signal: string) {
-  process.stderr.write(`[smartstudio-mcp] received ${signal}, shutting down.\n`);
+  process.stderr.write(`[graphstudio-mcp] received ${signal}, shutting down.\n`);
   listener.close(() => process.exit(0));
   // Hard exit if listener takes too long.
   setTimeout(() => process.exit(1), 5000).unref();

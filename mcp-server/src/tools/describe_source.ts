@@ -43,7 +43,7 @@ export const describeSourceTool = defineTool({
     "             whether the snapshot is fresh enough for the question.",
     "",
     "INPUT: { id }.",
-    "RETURNS: full source row (verbatim from SmartStudio).",
+    "RETURNS: full source row (verbatim from GraphStudio).",
   ].join("\n"),
   async execute(raw) {
     const { id } = input.parse(raw ?? {});
