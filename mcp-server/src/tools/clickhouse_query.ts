@@ -32,7 +32,7 @@ interface QueryResponse {
   // `duration_ms` is the graphstudio-side wall-clock for the full
   // /api/connections/:id/run roundtrip (auth + HTTP + parse +
   // count-query). `client_ms` is just the CH HTTP call from the
-  // smartstudio server's perspective (subset of duration_ms).
+  // graphstudio server's perspective (subset of duration_ms).
   // `server_ms` is CH server-side execution time parsed from
   // `X-ClickHouse-Summary` (`elapsed_ns / 1e6`); may be null when
   // CH didn't surface the header. `read_rows` / `read_bytes` come
@@ -103,7 +103,7 @@ export const clickhouseQueryTool = defineTool({
     "    request (HTTP roundtrip + CH execution + JSON decode).",
     "  - `server_ms` is what ClickHouse itself reports (from",
     "    X-ClickHouse-Summary.elapsed_ns); subtracting it from",
-    "    `duration_ms` is roughly network + smartstudio overhead.",
+    "    `duration_ms` is roughly network + graphstudio overhead.",
     "  - `read_rows` / `read_bytes` show the scan cost CH paid; useful",
     "    for understanding whether a query is hitting the right index.",
     "",
