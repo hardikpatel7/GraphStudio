@@ -16,7 +16,8 @@
     "start": "node dist/index.js",
     "start:http": "node dist/index-http.js",
     "clean": "rm -rf dist release",
-    "pack:release": "bash scripts/pack-release.sh"
+    "pack:release": "bash scripts/pack-release.sh",
+    "test": "vitest run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -29,6 +30,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.5",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.9"
   }
 }
