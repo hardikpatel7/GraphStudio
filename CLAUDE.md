@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What is SmartStudio?
+## What is GraphStudio?
 
-SmartStudio is a **metadata-driven platform** that configures and generates production-grade inventory management applications (InventorySmart) for retail clients. Each running instance is **one tenant** — one `(client, app_type, environment)` triple (e.g. `bealls-inventorysmart-dev`). Identity is read from `environment.toml` at startup.
+GraphStudio is a **metadata-driven platform** that configures and generates production-grade inventory management applications (InventorySmart) for retail clients. Each running instance is **one tenant** — one `(client, app_type, environment)` triple (e.g. `briscoes-inventorysmart-demo`). Identity is read from `environment.toml` at startup.
 
 The platform captures app metadata (DataViews, Sources, Pipelines, Dimensions, Modules) via a web UI and generates Rust gRPC services + React frontends for the generated app.
 
@@ -28,8 +28,20 @@ npm run dev:server:watch
 # Production build (TypeScript check + Vite bundle)
 npm run build
 
+# Serve production build locally (port 4173)
+npm run preview
+
 # Lint
 npm run lint
+
+# Frontend + MCP tests (Vitest)
+npm test
+
+# Rust unit + integration tests
+cd server && cargo test
+
+# MCP server tests only
+cd mcp-server && npm test
 ```
 
 The Rust server (`server/`) is built via Cargo; `npm run dev:server` wraps `cargo run --manifest-path server/Cargo.toml`. First build takes several minutes due to DuckDB and Tonic compilation.
@@ -47,7 +59,7 @@ cd mcp-server && npm run dev:http   # HTTP transport
 ### Two Processes, One Port in Dev
 
 Vite (`:5173`) proxies `/api` to the Rust Axum server (`:3001`). The Rust server also serves the built `dist/` in production. There are two HTML entry points:
-- `index.html` — main SmartStudio editor UI
+- `index.html` — main GraphStudio editor UI
 - `agent.html` — AI agent UI (separate Zustand state tree in `src/agent/`)
 
 ### Frontend (`src/`)
@@ -60,11 +72,19 @@ Single-page app. Navigation is driven by `useWorkspaceStore` (Zustand) which tra
 
 **Zustand stores** (`src/stores/`) — one per entity type (apps, dataviews, dimensions, filterConfigs, modules, submodules, components, codeGen). All stores use direct `api.` calls; there is no global fetch layer beyond `src/api/client.ts`.
 
-**Path alias**: `@/` maps to `src/` (configured in `vite.config.ts`).
+**Path alias**: `@/` maps to `src/` (configured in `vite.config.ts` and `vitest.config.ts`).
+
+**Note:** `vitest.config.ts` is a separate file from `vite.config.ts` due to a type conflict between vite v6 (rolldown) and vitest v3's bundled vite (rollup). The test config (`globals`, `environment`, `setupFiles`) lives in `vitest.config.ts`; build/dev config stays in `vite.config.ts`. `vitest.config.ts` is excluded from `tsconfig.node.json` and carries `// @ts-nocheck`.
 
 ### Backend (`server/src/`)
 
-Rust Axum server. All API routes are registered in `main.rs`. Key modules:
+Rust Axum server. The crate is split into a **library** (`graphstudio_server`) and a **binary** (`main.rs`):
+- `lib.rs` — re-exports all modules and `build_router()` / `AppState` for integration tests
+- `app_state.rs` — `AppState` and `ActiveRun` structs (moved out of `main.rs`)
+- `router.rs` — `pub fn build_router(state: Arc<AppState>) -> Router` (extracted from `main.rs`)
+- `main.rs` — boot sequence only; calls `build_router()` and adds the static-file fallback
+
+Key modules:
 
 | Module | Role |
 |---|---|
@@ -77,7 +97,7 @@ Rust Axum server. All API routes are registered in `main.rs`. Key modules:
 | `agent/` | AI agent subsystem (LLM routing via Rig, usage metering, workspace/session SQLite) |
 | `services/` | Long-running background tasks: RCL gRPC (Tonic), pipeline scheduler, CDC auto-start, article-selection gRPC |
 
-**AppState** (in `main.rs`) is the single `Arc<AppState>` threaded through every handler. It holds live state that can't live in SQLite: the running graph snapshots (`ArcSwapOption`), active pipeline run, CDC manager, agent state, UAM store, etc.
+**AppState** (defined in `app_state.rs`) is the single `Arc<AppState>` threaded through every handler. It holds live state that can't live in SQLite: the running graph snapshots (`ArcSwapOption`), active pipeline run, CDC manager, agent state, UAM store, etc.
 
 ### Data Model (Tenant SQLite)
 
@@ -130,7 +150,7 @@ home_path   = "/path/to/home"
 client      = "bealls"
 app_type    = "inventorysmart"
 environment = "dev"
-is_new      = false   # true copies starter templates into a fresh tenant
+is_new      = false   # set true on first boot of a NEW tenant — bootstraps empty SQLite schema; flip back to false after first successful start
 [server]
 port      = 3001
 grpc_port = 50051
@@ -150,11 +170,17 @@ For local dev, LLM keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) can be set via s
 2. **No `useState` during render** — auto-selection logic (module/sub/component) must use `useEffect`, not `useState` initializer.
 3. **Passwords are masked** in GET responses (`••••••••`) and preserved on save if the value is still the mask string.
 4. **Pipeline serialization** — DuckDB doesn't allow concurrent write connections to the same file. `AppState.pipeline_run_lock` serializes all pipeline runs. Read-only queries (Live View, schema introspect) bypass this lock.
-5. **Route order** in `main.rs` — generic parameterized routes like `/pipelines/{id}` must be registered AFTER specific sub-routes like `/pipelines/cancel` and `/pipelines/active`, or Axum will match the literal strings as IDs.
+5. **Route order** in `router.rs` — generic parameterized routes like `/pipelines/{id}` must be registered AFTER specific sub-routes like `/pipelines/cancel` and `/pipelines/active`, or Axum will match the literal strings as IDs.
 6. **`preserve_order` in TOML** — the `indexmap`-backed TOML deserializer is used specifically for graph specs so key insertion order is preserved (hierarchy level ordering, metric source ordering).
 
 ## MCP Server
 
-The `mcp-server/` package exposes SmartStudio's data layer to Claude Code via MCP tools (graph queries, DuckDB queries, DataView reads, etc.). See `mcp-server/README.md` and `docs/smartstudio-mcp-user-guide.md`.
+The `mcp-server/` package exposes GraphStudio's data layer to Claude Code via MCP tools (graph queries, DuckDB queries, DataView reads, etc.). See `mcp-server/README.md` and `docs/smartstudio-mcp-user-guide.md`.
 
-When answering a question using smartstudio MCP tools, review the tool trace before composing the reply. File `mcp__smartstudio__submit_feedback` if: a graph tool couldn't answer something it should have been able to; a graph tool returned 404/400; multiple tool calls assembled what should have been one answer; or a partial/estimated answer was returned. Include `example_question` on every feedback entry. File before responding.
+When answering a question using graphstudio MCP tools, review the tool trace before composing the reply. File `mcp__graphstudio__submit_feedback` if: a graph tool couldn't answer something it should have been able to; a graph tool returned 404/400; multiple tool calls assembled what should have been one answer; or a partial/estimated answer was returned. Include `example_question` on every feedback entry. File before responding.
+
+## Further Reading
+
+- **[how-to-use.md](how-to-use.md)** — first-time setup, blank-state walkthrough, tenant switching, troubleshooting
+- **[README.md](README.md)** — product overview, capabilities, data flow, quick start
+- **[docs/primer.md](docs/primer.md)** — deep-dive on every concept (Sources, Pipelines, DataViews, CDC, Graph, code generation)
