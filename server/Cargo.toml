@@ -1,10 +1,10 @@
 [package]
-name = "smartstudio-server"
+name = "graphstudio-server"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "smartstudio_server"
+name = "graphstudio_server"
 path = "src/lib.rs"
 
 # Whole-program optimization for release builds. fat LTO + a single

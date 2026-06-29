@@ -114,7 +114,7 @@ pub mod rig_backend {
                  \n\
                  ---\n\
                  \n\
-                 You are a SmartStudio retail-inventory planning assistant. You have access to tools \
+                 You are a GraphStudio retail-inventory planning assistant. You have access to tools \
                  that read this tenant's metadata (DataViews, Sources, Graphs, Connections) and that \
                  query the underlying data stores (DuckDB, ClickHouse). \
                  \n\n## How to answer\n\

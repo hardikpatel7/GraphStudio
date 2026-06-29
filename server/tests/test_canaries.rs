@@ -63,8 +63,8 @@ enabled = false
     );
     let toml_path = tmp2.path().join("environment.toml");
     std::fs::write(&toml_path, toml).unwrap();
-    let cfg = smartstudio_server::instance_config::load(&toml_path).unwrap();
-    let resolved = smartstudio_server::instance_config::resolve(cfg).unwrap();
+    let cfg = graphstudio_server::instance_config::load(&toml_path).unwrap();
+    let resolved = graphstudio_server::instance_config::resolve(cfg).unwrap();
     assert!(
         resolved.db_path.ends_with("smartstudio.db"),
         "db_path '{}' does not end with 'smartstudio.db'",

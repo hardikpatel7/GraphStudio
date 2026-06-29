@@ -5,7 +5,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 use std::sync::Arc;
-use smartstudio_server::{
+use graphstudio_server::{
     agent, article_selection, db, graph, handlers, instance_config,
     pg_pools, query, seed, service, services, trace_db, uam,
     AppState,
@@ -15,7 +15,7 @@ use smartstudio_server::{
 async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
-            .add_directive("smartstudio_server=info".parse().unwrap())
+            .add_directive("graphstudio_server=info".parse().unwrap())
             .add_directive("tower_http=info".parse().unwrap()))
         .init();
 
@@ -186,7 +186,7 @@ async fn main() {
         tracing::warn!(error = %e, "[feedback] table ensure failed");
     }
 
-    let api = smartstudio_server::build_router(state.clone());
+    let api = graphstudio_server::build_router(state.clone());
 
     let app = Router::new()
         .nest("/api", api)
@@ -200,7 +200,7 @@ async fn main() {
 
     let addr = format!("0.0.0.0:{}", port);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
-    tracing::info!("SmartStudio server on http://localhost:{}", port);
+    tracing::info!("GraphStudio server on http://localhost:{}", port);
 
     // Auto-resume CDC streams for cdc_pg Sources (handlers::sources). The
     // legacy query_sources auto-start was retired in Phase 4 of source-unification.
