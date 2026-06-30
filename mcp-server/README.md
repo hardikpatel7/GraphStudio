@@ -1,21 +1,27 @@
-# smartstudio-mcp
+# graphstudio-mcp
 
-Phase 1 MCP server. Exposes SmartStudio's `article_selection` DataView (46 inventory columns) to Claude Code as 8 typed tools — no new Anthropic key, no SmartStudio backend changes.
+MCP server exposing GraphStudio's data layer to Claude Code as typed tools — 
+no new Anthropic key required.
 
 ## Tools
 
 | Tool | Mutates | Purpose |
 |---|---|---|
-| `materialize_article_selection` | yes | Run the article-selection materializer (PG → DuckDB) |
-| `article_selection_status` | no | Freshness + row count |
-| `describe_article_selection` | no | Schema dictionary (46 cols + filter config + dimension) |
-| `glossary` | no | Retail-inventory term glossary keyed to columns |
-| `resolve_filter_values` | no | Distinct values for the product filter (cascading) |
-| `list_articles` | no | Sorted, paginated, unfiltered listing |
-| `query_articles` | no | SELECT-only SQL over the `article_selection` DuckDB table |
-| `article_detail` | no | Full row for one article, with `*_map` columns parsed |
+| `list_dataviews` | no | List all DataViews in the running tenant |
+| `describe_dataview` | no | Schema dictionary for a DataView (columns + filter config) |
+| `introspect_dataview` | no | Runtime schema introspection |
+| `dataview_read` | no | Sorted, filtered, paginated read |
+| `resolve_filter_values` | no | Distinct values for a named filter config |
+| `query_duckdb` | no | SELECT-only SQL over tenant DuckDB |
+| `list_graphs` | no | List all graphs in the tenant |
+| `graph_traverse` | no | Walk edges in a graph snapshot |
+| `graph_cross_filter` | no | Filter a graph snapshot, return attribute distincts |
+| `product_detail` | no | Full row for one product/SKU, with JSON map columns parsed |
+| `glossary` | no | Domain-specific term glossary for this tenant |
+| `materialize_dataview` | yes | Run a DataView's source materializer |
+| `dataview_status` | no | Freshness + row count for a materialized DataView |
 
-`materialize_article_selection` is the only write — Claude Code prompts before invoking it.
+`materialize_dataview` is the only write — Claude Code prompts before invoking it.
 
 ## Build
 
@@ -27,12 +33,12 @@ npm run build       # → dist/index.js
 
 ## Wire into Claude Code
 
-Add to `~/.claude.json` (or project-scoped `.mcp.json` at SmartStudio repo root):
+Add to `~/.claude.json` (or project-scoped `.mcp.json` at repo root):
 
 ```jsonc
 {
   "mcpServers": {
-    "smartstudio": {
+    "graphstudio": {
       "command": "node",
       "args": ["/path/to/GraphStudio/mcp-server/dist/index.js"],
       "env": { "SMARTSTUDIO_URL": "http://localhost:3001" }
@@ -41,44 +47,27 @@ Add to `~/.claude.json` (or project-scoped `.mcp.json` at SmartStudio repo root)
 }
 ```
 
-Restart Claude Code. Tools appear under the `smartstudio` namespace (e.g., `mcp__smartstudio__query_articles`).
+Restart Claude Code. Tools appear under the `graphstudio` namespace.
 
 ## Prerequisites
 
-1. SmartStudio Rust backend running on `:3001` (or wherever `SMARTSTUDIO_URL` points).
-2. `[rcl] enabled = true` in `environment.toml` (materializer needs the in-process RCL ruleset).
-3. A default PG connection registered in SmartStudio.
+1. GraphStudio Rust backend running on `:3001` (or wherever `SMARTSTUDIO_URL` points).
+2. A default PG connection registered in GraphStudio (for materializers).
 
 ## Verification (first session)
 
 In a Claude Code session, ask:
 
-1. "Is the article selection up to date?" → calls `article_selection_status`.
-2. "Materialize it now" → Claude Code prompts for `materialize_article_selection`, approve, returns timings + `rcl_version`.
-3. "What columns does article_selection have?" → `describe_article_selection`.
-4. "What brands exist?" → `resolve_filter_values({context: undefined})` returns L1/L2/.../brand values.
-5. "Show me stockouts in brand FILA" → `query_articles` with `WHERE brand='FILA' AND oh=0 AND mapped_stores_count>0`.
-6. "Tell me about article XYZ123" → `article_detail`.
-7. "Sum OH by brand, top 10" → `query_articles` with GROUP BY.
-
-## Constraints in this phase
-
-- Scoped to one DataView (`dv_article_selection_v7`).
-- No filter pass-through on `POST /api/dataviews/{id}/data` for duckdb_table sources — we use `POST /api/query` directly.
-- No historical / WoW deltas (no snapshot history yet).
-- No V8 article_graph traversal (next phase).
-- No authoring tools (next phase).
+1. "What DataViews does this tenant have?" → calls `list_dataviews`
+2. "Describe the store_positions DataView" → calls `describe_dataview`
+3. "Show me the top 10 rows sorted by on_hand_units" → calls `dataview_read`
+4. "What dark stores are available?" → calls `resolve_filter_values`
+5. "Query the store positions for dark store DS001" → calls `query_duckdb`
 
 ## Dev
 
 ```bash
-SMARTSTUDIO_URL=http://localhost:3001 npm run dev          # stdio (local Claude Code)
+SMARTSTUDIO_URL=http://localhost:3001 npm run dev          # stdio
 MCP_AUTH_TOKEN=$(openssl rand -hex 32) \
-SMARTSTUDIO_URL=http://localhost:3001 npm run dev:http     # HTTP on :3101 (deployed shape)
+SMARTSTUDIO_URL=http://localhost:3001 npm run dev:http     # HTTP on :3101
 ```
-
-Stdio banner prints on stderr; stdout is the MCP protocol channel.
-
-## Production deployment
-
-For AWX + Ubuntu + nginx see [`deploy/README.md`](./deploy/README.md). Build a release tarball with `npm run pack:release`, upload it to your artifact store, then run the included Ansible role.
