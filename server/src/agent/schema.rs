@@ -415,6 +415,8 @@ fn is_real_data_table(name: &str) -> bool {
         "kpi_", "fact_", "f_actuals", "_actual", "_historical",
         "_daily", "_weekly", "_monthly", "_yearly",
         "sales", "revenue", "orders", "inventory", "items", "products", "customers",
+        "order_", "shipment_", "delivery_", "fulfilment_", "fulfillment_", "route_",
+        "sku_", "position_", "replenishment_", "rating_",
         "calculated_",
     ];
     let negative: &[&str] = &[

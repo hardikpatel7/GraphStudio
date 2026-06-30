@@ -586,7 +586,7 @@ impl Tool for GraphCrossFilter {
                 "type": "object",
                 "properties": {
                     "id":          { "type": "string" },
-                    "target_kind": { "type": ["string", "null"], "description": "Kind whose nodes form the candidate set. Pass null for the default 'article'." },
+                    "target_kind": { "type": ["string", "null"], "description": "Kind whose nodes form the candidate set. Pass null to use the graph's leaf-level kind (the most granular node type)." },
                     "attributes":  { "type": "array", "items": { "type": "object" },
                                      "description": "List of attribute objects to project distinct values for. Each has at least an `attribute_name` field." },
                     "filters":     { "type": "array", "items": { "type": "object" },
