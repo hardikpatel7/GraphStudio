@@ -13,28 +13,30 @@ const input = z
 
 export const glossaryTool = defineTool({
   name: "glossary",
-  title: "Retail-inventory glossary for this DataView",
+  title: "Quick-commerce glossary for Bolt Basket store_positions",
   destructive: false,
   inputSchema: input,
   description: [
-    "Definitions for retail-inventory terms grounded in the article_selection columns.",
-    "Covers OH, OO, IT, NAI, reserve, allocated, WOS, WOC, min/max stock, APS, in-stock %,",
-    "LW metrics, RCL, mapped stores, DC, and the standard exception rules (stockout,",
-    "overstock, below-min, reserve gap, no-eligible-stores, dead stock).",
+    "Definitions for quick-commerce / dark-store terms grounded in the store_positions columns.",
+    "Covers OHU, OOU, available, reserved, DOS, DOC, fill rate, min/max stock, reorder qty,",
+    "dark store, service zone, delivery type, velocity, stockout, low stock, overstock,",
+    "freshness, substitution chain, dead SKU, rating, complaint rate, hub, replenishment.",
     "",
-    "Call this when the user uses retail jargon you want to map to specific columns,",
+    "Call this when the user uses quick-commerce jargon you want to map to specific columns,",
     "or when you need the canonical definition before composing a SQL filter.",
     "",
-    "INPUT: { term? } — look up a specific term (matches on term + synonyms).",
+    "INPUT: { term? } — look up a specific term (case-insensitive).",
     "",
-    "RETURNS: { entries: [{ term, aka, meaning, related_columns }] }.",
+    "RETURNS: { entries: [{ term, meaning }] }.",
   ].join("\n"),
   async execute(raw) {
     const { term } = input.parse(raw ?? {});
     if (term) {
-      const e = GLOSSARY_INDEX.get(term.trim().toLowerCase());
-      return { entries: e ? [e] : [], matched: Boolean(e) };
+      const meaning = GLOSSARY_INDEX.get(term.trim().toLowerCase());
+      if (!meaning) return { entries: [], matched: false };
+      return { entries: [{ term: term.trim(), meaning }], matched: true };
     }
-    return { entries: GLOSSARY, matched: true };
+    const entries = Object.entries(GLOSSARY).map(([t, meaning]) => ({ term: t, meaning }));
+    return { entries, matched: true };
   },
 });

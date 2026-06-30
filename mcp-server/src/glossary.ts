@@ -1,153 +1,38 @@
-// Retail-inventory glossary tailored to the columns in article_selection.
+// Quick-commerce glossary tailored to the Bolt Basket store_positions DataView.
 // Used by the `glossary` tool to ground Claude Code's interpretation of prompts.
 
-export interface GlossaryEntry {
-  term: string;
-  aka: string[];
-  meaning: string;
-  related_columns?: string[];
-}
+export const GLOSSARY: Record<string, string> = {
+  OHU:       'On-Hand Units — units physically present and countable in the dark store.',
+  OOU:       'On-Order Units — units on inbound replenishment orders not yet received.',
+  Available: 'Pickable units = on_hand_units minus reserved_units. The quantity an order can actually draw from right now.',
+  Reserved:  'Units committed to in-flight orders that have not been picked yet.',
+  DOS:       'Days of Supply — on_hand_units divided by daily_velocity. How many days the current stock will last at the current sales rate.',
+  DOC:       'Days of Coverage — available_units divided by daily_velocity. Like DOS but excludes reserved stock.',
+  'Fill rate': 'Percentage of ordered line items that were fulfilled from on-hand stock without substitution or cancellation.',
+  'Min stock': 'Replenishment trigger level. When available_units drops to or below min_stock, a replenishment order should be raised.',
+  'Max stock': 'Upper stocking limit for the dark store / SKU pair. Prevents over-ordering and storage overflow.',
+  'Reorder qty': 'Standard order quantity raised when a replenishment trigger fires.',
+  'Dark store':  'A micro-fulfilment center (MFC) — a warehouse optimised for rapid picking of online grocery orders, not open to walk-in shoppers.',
+  'Service zone': 'The geographic delivery area served by a specific dark store.',
+  'Delivery type': 'Speed tier for the delivery slot: express (minutes), standard (hours), or cold-chain (temperature-controlled).',
+  Velocity:  'Sales rate. daily_velocity = 7-day rolling unit sales ÷ 7. Drives DOS and replenishment triggers.',
+  Stockout:  'Condition where available_units = 0 — no stock left to fulfil orders for this SKU at this dark store.',
+  'Low stock': 'available_units is above zero but at or below min_stock. The SKU is at risk of stocking out before replenishment arrives.',
+  'Overstock': 'on_hand_units exceeds max_stock. Excess inventory ties up space and cash.',
+  'Freshness': 'Shelf-life indicator for perishables. Tracked as days remaining to expiry for the oldest lot in the dark store.',
+  'Substitution chain': 'An ordered list of alternative SKUs that can fulfil an order if the primary SKU is out of stock.',
+  'Dead SKU': 'A SKU with zero velocity for 14+ days — likely discontinued, seasonal, or mis-catalogued.',
+  'Rating':  'Average customer satisfaction score (1–5 stars) for a SKU at a specific dark store, from post-delivery survey responses.',
+  'Complaint rate': 'Complaints (wrong item, damaged, missing) as a percentage of delivered orders for this SKU / dark store.',
+  Hub:       'Central warehouse that replenishes multiple dark stores. Called a Distribution Center (DC) in traditional retail.',
+  Replenishment: 'Inbound stock transfer from hub/warehouse to dark store, triggered when available_units hits min_stock.',
+};
 
-export const GLOSSARY: GlossaryEntry[] = [
-  {
-    term: "OH",
-    aka: ["on hand", "on-hand", "stock on hand"],
-    meaning: "Units physically on hand across DCs and stores.",
-    related_columns: ["oh", "oh_map"],
-  },
-  {
-    term: "OO",
-    aka: ["on order", "on-order"],
-    meaning: "Units on a PO that have been ordered but not yet received.",
-    related_columns: ["oo"],
-  },
-  {
-    term: "IT",
-    aka: ["in transit", "in-transit"],
-    meaning: "Units that have shipped from a source but have not yet arrived at their destination.",
-    related_columns: ["it"],
-  },
-  {
-    term: "NAI",
-    aka: ["net available inventory", "available to allocate"],
-    meaning: "Net available inventory: OH + OO + IT minus reserves and already-allocated units.",
-    related_columns: ["net_available_inventory"],
-  },
-  {
-    term: "Reserve",
-    aka: ["reserve quantity", "held back"],
-    meaning: "Units intentionally held back from allocation (e.g., for safety, future events).",
-    related_columns: ["reserve_quantity", "rq_map"],
-  },
-  {
-    term: "Allocated",
-    aka: ["allocated units"],
-    meaning: "Units already assigned to specific stores by the allocation engine.",
-    related_columns: ["allocated_units", "au_map", "last_allocated"],
-  },
-  {
-    term: "WOS",
-    aka: ["weeks of supply", "weeks of cover", "current cover"],
-    meaning: "Current weeks of supply — how many weeks the on-hand position covers at the recent sales rate.",
-    related_columns: ["wos"],
-  },
-  {
-    term: "WOC",
-    aka: ["weeks of cover target", "target cover"],
-    meaning: "Target weeks-of-cover band. min_woc / max_woc bracket the desired WOS.",
-    related_columns: ["min_woc", "max_woc"],
-  },
-  {
-    term: "Min stock",
-    aka: ["minimum stock", "reorder point"],
-    meaning: "Lower threshold of units below which the article is considered understocked.",
-    related_columns: ["min_stock", "min_stock_validator"],
-  },
-  {
-    term: "Max stock",
-    aka: ["maximum stock", "overstock ceiling"],
-    meaning: "Upper threshold of units above which the article is considered overstocked.",
-    related_columns: ["max_stock", "max_stock_validator"],
-  },
-  {
-    term: "APS",
-    aka: ["average per-store sales", "avg per store"],
-    meaning: "Average sales rate per store carrying the article.",
-    related_columns: ["aps"],
-  },
-  {
-    term: "In-stock %",
-    aka: ["in stock perc", "service level"],
-    meaning: "Percentage of eligible stores with at least one unit available.",
-    related_columns: ["in_stock_perc"],
-  },
-  {
-    term: "LW",
-    aka: ["last week", "last-week"],
-    meaning: "Trailing-week metrics (units sold, revenue, margin).",
-    related_columns: ["lw_units", "lw_revenue", "lw_margin"],
-  },
-  {
-    term: "RCL",
-    aka: ["rules and constraint layer", "ruleset"],
-    meaning: "Business-rules layer governing eligibility, allocation policy, and constraints. The article_selection table is materialized against an RCL snapshot identified by rcl_version.",
-    related_columns: ["allocation_rules", "mapped_stores_count"],
-  },
-  {
-    term: "Mapped stores",
-    aka: ["eligible stores", "carrying stores"],
-    meaning: "Number of stores that RCL permits to carry this article. mapped_stores_count = 0 means no store is eligible to receive it.",
-    related_columns: ["mapped_stores_count"],
-  },
-  {
-    term: "DC",
-    aka: ["distribution center"],
-    meaning: "A warehouse from which stores are replenished. dcs lists DCs holding this article.",
-    related_columns: ["dcs"],
-  },
-  {
-    term: "Stockout",
-    aka: ["out of stock", "OOS"],
-    meaning: "An article that has eligible stores but zero on-hand units (oh = 0 AND mapped_stores_count > 0).",
-    related_columns: ["oh", "mapped_stores_count"],
-  },
-  {
-    term: "Overstock",
-    aka: ["overstocked", "above max"],
-    meaning: "An article with on-hand units above the max_stock policy threshold.",
-    related_columns: ["oh", "max_stock"],
-  },
-  {
-    term: "Below min",
-    aka: ["understock", "below reorder"],
-    meaning: "An article with on-hand units below the min_stock policy threshold.",
-    related_columns: ["oh", "min_stock"],
-  },
-  {
-    term: "Reserve gap",
-    aka: ["reserve shortfall"],
-    meaning: "Reserved quantity exceeds net available inventory — reserve commitments cannot be fully honored from current position.",
-    related_columns: ["reserve_quantity", "net_available_inventory"],
-  },
-  {
-    term: "No eligible stores",
-    aka: ["unmapped article"],
-    meaning: "An article with mapped_stores_count = 0 — RCL does not currently permit any store to carry it.",
-    related_columns: ["mapped_stores_count"],
-  },
-  {
-    term: "Dead stock",
-    aka: ["non-mover"],
-    meaning: "An article holding units but not selling — typical heuristic: oh > 0 AND lw_units = 0.",
-    related_columns: ["oh", "lw_units"],
-  },
-];
-
-export const GLOSSARY_INDEX: Map<string, GlossaryEntry> = (() => {
-  const idx = new Map<string, GlossaryEntry>();
-  for (const e of GLOSSARY) {
-    idx.set(e.term.toLowerCase(), e);
-    for (const a of e.aka) idx.set(a.toLowerCase(), e);
+/** Case-insensitive lookup index over the glossary keys. */
+export const GLOSSARY_INDEX: Map<string, string> = (() => {
+  const idx = new Map<string, string>();
+  for (const [term, meaning] of Object.entries(GLOSSARY)) {
+    idx.set(term.toLowerCase(), meaning);
   }
   return idx;
 })();

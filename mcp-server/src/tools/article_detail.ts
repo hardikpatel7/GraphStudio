@@ -5,13 +5,13 @@ import { DUCKDB_TABLE } from "../schema.js";
 
 const input = z
   .object({
-    article: z.string().optional().describe("Article (SKU) identifier."),
-    ph_code: z.string().optional().describe("Product hierarchy code."),
+    sku_code: z.string().describe("SKU identifier to look up."),
+    dark_store_id: z
+      .string()
+      .optional()
+      .describe("Optional dark store ID to scope the lookup to a specific location."),
   })
-  .refine((v) => Boolean(v.article || v.ph_code), {
-    message: "Provide at least one of `article` or `ph_code`.",
-  })
-  .describe("Identify a single article by article or ph_code.");
+  .describe("Identify a single SKU position by sku_code and optional dark_store_id.");
 
 interface QueryResponse {
   rows: Array<Record<string, unknown>>;
@@ -20,57 +20,40 @@ interface QueryResponse {
   duration_ms: number;
 }
 
-const MAP_COLUMNS = ["oh_map", "rq_map", "au_map"];
-
-/** Best-effort parse of the JSON-ish *_map columns. Leaves the raw string in place if it doesn't parse. */
-function decorateMaps(row: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = { ...row };
-  for (const c of MAP_COLUMNS) {
-    const raw = row[c];
-    if (typeof raw !== "string" || raw.length === 0) continue;
-    try {
-      out[`${c}__parsed`] = JSON.parse(raw);
-    } catch {
-      // Some maps may be {"k": v, ...} but with single quotes or k=v syntax — skip if not JSON.
-    }
-  }
-  return out;
-}
-
 function escapeLiteral(v: string): string {
   return v.replace(/'/g, "''");
 }
 
 export const articleDetailTool = defineTool({
-  name: "article_detail",
-  title: "Single-article inventory card",
+  name: "product_detail",
+  title: "Single-SKU dark-store position card",
   destructive: false,
   inputSchema: input,
   description: [
-    "Fetch the full row for one article from article_selection, with the per-node JSON-ish",
-    "columns (oh_map, rq_map, au_map) parsed when they're valid JSON. Use this when the",
-    "user asks about a specific article/SKU and wants the full picture.",
+    "Fetch the full row for one product/SKU from store_positions.",
+    "Use when the user asks about a specific SKU at a specific dark store.",
     "",
-    "INPUT: { article? } or { ph_code? } — at least one required.",
+    "INPUT: { sku_code } — required. { dark_store_id? } — optional, filters to one dark store.",
     "",
-    "RETURNS: { found, article: row (with *_map__parsed when parseable) }.",
+    "RETURNS: { found, product: row, executed_sql }.",
   ].join("\n"),
   async execute(raw) {
-    const { article, ph_code } = input.parse(raw);
-    const clauses: string[] = [];
-    if (article) clauses.push(`article = '${escapeLiteral(article)}'`);
-    if (ph_code) clauses.push(`ph_code = '${escapeLiteral(ph_code)}'`);
-    const where = clauses.join(" OR ");
+    const { sku_code, dark_store_id } = input.parse(raw);
+    const clauses: string[] = [`sku_code = '${escapeLiteral(sku_code)}'`];
+    if (dark_store_id) {
+      clauses.push(`dark_store_id = '${escapeLiteral(dark_store_id)}'`);
+    }
+    const where = clauses.join(" AND ");
     const sql = `SELECT * FROM ${DUCKDB_TABLE} WHERE ${where} LIMIT 1`;
     const data = await http.post<QueryResponse>("/api/query", { sql, limit: 1 });
 
     const row = data.rows[0];
     if (!row) {
-      return { found: false, article: null, executed_sql: sql };
+      return { found: false, product: null, executed_sql: sql };
     }
     return {
       found: true,
-      article: decorateMaps(row),
+      product: row,
       executed_sql: sql,
       duration_ms: data.duration_ms,
     };
