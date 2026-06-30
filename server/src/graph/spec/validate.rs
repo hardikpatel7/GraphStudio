@@ -632,23 +632,23 @@ unnest = true"#,
         assert!(codes(&issues(&t)).contains(&"LEVEL_SPLIT_AND_UNNEST"));
     }
 
-    /// The inventorysmart graph template lives at
-    /// `templates/inventorysmart/graphs/default.toml`. This test
+    /// The boltbasket graph template lives at
+    /// `templates/boltbasket/graphs/default.toml`. This test
     /// exercises the parser + validator against that file so a
     /// regression surfaces immediately rather than waiting for a
     /// runtime POST `/api/graphs/:id/validate` against a real tenant.
     #[test]
-    fn inventorysmart_template_parses_and_validates() {
+    fn boltbasket_template_parses_and_validates() {
         // CARGO_MANIFEST_DIR points at `server/`; template TOML lives at
-        // `../templates/inventorysmart/graphs/...` from there.
+        // `../templates/boltbasket/graphs/...` from there.
         let path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../templates/inventorysmart/graphs/default.toml"
+            "/../templates/boltbasket/graphs/default.toml"
         );
         let text = std::fs::read_to_string(path)
             .unwrap_or_else(|e| panic!("read {path}: {e}"));
         let spec = crate::graph::spec::from_toml(&text)
-            .unwrap_or_else(|e| panic!("parse inventorysmart template: {e:#}"));
+            .unwrap_or_else(|e| panic!("parse boltbasket template: {e:#}"));
         let issues = validate(&spec);
         let errors: Vec<_> = issues
             .iter()
@@ -656,7 +656,7 @@ unnest = true"#,
             .collect();
         assert!(
             errors.is_empty(),
-            "bealls TOML failed validation:\n{}",
+            "boltbasket TOML failed validation:\n{}",
             errors
                 .iter()
                 .map(|i| format!("  [{}] {}", i.code, i.message))

@@ -13,7 +13,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export interface Identity {
-  id: string;            // tenant_id, e.g. "bealls-inventorysmart-dev"
+  id: string;            // tenant_id, e.g. "boltbasket-darkstoredash-demo"
   client: string;
   app_type: string;
   environment: string;
