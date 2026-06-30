@@ -1,6 +1,0 @@
-# Per-article WOC targets joined with product hierarchy. 46,610 rows on
-# bealls. Backs dv_articles_over_woc.
-id           = "src_articles_woc"
-display_name = "Articles with Weeks of Cover"
-kind         = "duckdb_table"
-target_table = "v_articles_woc"

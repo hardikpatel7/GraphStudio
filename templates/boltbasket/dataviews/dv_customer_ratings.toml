@@ -1,0 +1,47 @@
+id           = "dv_customer_ratings"
+display_name = "Customer Ratings"
+
+[source]
+source_id = "src_customer_ratings"
+
+[[columns]]
+name = "sku_code"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "dark_store_id"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "avg_rating"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "ratings"
+
+[[columns]]
+name = "rating_count"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "ratings"
+
+[[columns]]
+name = "complaint_count"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "ratings"
+
+[[columns]]
+name = "last_rating_date"
+type = "DATE"
+sortable = true
+visible = true
+group = "ratings"

@@ -1,6 +1,0 @@
-# RCL rule registry — joined view of the three raw_rcl_psm_* tables.
-# 109 rows on bealls. Backs dv_rcl_rules.
-id           = "src_rcl_rules"
-display_name = "RCL Rule Registry"
-kind         = "duckdb_table"
-target_table = "v_rcl_rules"

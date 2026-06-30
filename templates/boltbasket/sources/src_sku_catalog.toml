@@ -1,0 +1,23 @@
+# Product master / SKU catalog.
+id           = "src_sku_catalog"
+display_name = "SKU Catalog"
+kind         = "pg_query"
+
+[config]
+query = """
+  SELECT
+    sku_code,
+    product_name,
+    category_l1,
+    category_l2,
+    brand,
+    upc,
+    unit_size,
+    unit_uom,
+    delivery_type,
+    is_active,
+    created_at
+  FROM sku_master
+  WHERE is_active = true
+  ORDER BY category_l1, category_l2, brand, product_name
+"""

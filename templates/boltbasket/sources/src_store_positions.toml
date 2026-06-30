@@ -1,0 +1,8 @@
+# Dark store inventory positions — one row per SKU × dark store.
+# Populated by the store_positions pipeline (pg_query → DuckDB extract).
+id           = "src_store_positions"
+display_name = "Store Positions"
+kind         = "duckdb_table"
+
+[config]
+table = "store_positions"

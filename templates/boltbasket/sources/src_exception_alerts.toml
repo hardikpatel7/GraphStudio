@@ -1,0 +1,8 @@
+# Exception alerts derived from store_positions.
+# Flags: stockout, low_stock, overstock, freshness_risk.
+id           = "src_exception_alerts"
+display_name = "Exception Alerts"
+kind         = "duckdb_query"
+
+[config]
+query = "SELECT * FROM v_exception_alerts ORDER BY severity DESC, dark_store_id, sku_code"

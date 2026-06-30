@@ -1,0 +1,21 @@
+# Open replenishment purchase orders: warehouse → dark store.
+id           = "src_distribution_orders"
+display_name = "Distribution Orders"
+kind         = "pg_query"
+
+[config]
+query = """
+  SELECT
+    po_number,
+    sku_code,
+    dark_store_id,
+    warehouse_id,
+    ordered_qty,
+    received_qty,
+    eta_date,
+    status,
+    created_at
+  FROM replenishment_orders
+  WHERE status NOT IN ('cancelled', 'closed')
+  ORDER BY eta_date ASC
+"""

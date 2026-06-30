@@ -1,0 +1,61 @@
+id           = "dv_sku_catalog"
+display_name = "SKU Catalog"
+
+[source]
+source_id = "src_sku_catalog"
+
+[[columns]]
+name = "sku_code"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "product_name"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "category_l1"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "category_l2"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "brand"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "unit_size"
+type = "VARCHAR"
+sortable = false
+visible = true
+group = "identity"
+
+[[columns]]
+name = "delivery_type"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "config"
+
+[[columns]]
+name = "is_active"
+type = "BOOLEAN"
+sortable = true
+visible = true
+group = "status"
