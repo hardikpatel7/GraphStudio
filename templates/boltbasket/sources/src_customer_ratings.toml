@@ -1,0 +1,18 @@
+# Post-delivery customer ratings aggregated per SKU × dark store.
+id           = "src_customer_ratings"
+display_name = "Customer Ratings"
+kind         = "pg_query"
+
+[config]
+query = """
+  SELECT
+    sku_code,
+    dark_store_id,
+    AVG(rating)::FLOAT      AS avg_rating,
+    COUNT(*)                AS rating_count,
+    SUM(CASE WHEN complaint THEN 1 ELSE 0 END)::INT AS complaint_count,
+    MAX(survey_date)        AS last_rating_date
+  FROM delivery_surveys
+  WHERE survey_date >= CURRENT_DATE - 30
+  GROUP BY sku_code, dark_store_id
+"""

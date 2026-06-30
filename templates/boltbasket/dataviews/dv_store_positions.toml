@@ -1,0 +1,138 @@
+id           = "dv_store_positions"
+display_name = "Store Inventory Positions"
+
+[source]
+source_id = "src_store_positions"
+
+[[columns]]
+name = "sku_code"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "product_name"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "category_l1"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "category_l2"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "brand"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "hierarchy"
+
+[[columns]]
+name = "delivery_type"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "dark_store_id"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "dark_store_name"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "service_zone"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "on_hand_units"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "reserved_units"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "available_units"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "on_order_units"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "in_stock"
+type = "BOOLEAN"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "daily_velocity"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "performance"
+
+[[columns]]
+name = "days_of_supply"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "performance"
+
+[[columns]]
+name = "fill_rate_pct"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "performance"
+
+[[columns]]
+name = "min_stock"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "config"
+
+[[columns]]
+name = "max_stock"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "config"

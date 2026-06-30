@@ -1,0 +1,61 @@
+id           = "dv_distribution_orders"
+display_name = "Distribution Orders"
+
+[source]
+source_id = "src_distribution_orders"
+
+[[columns]]
+name = "po_number"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "sku_code"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "dark_store_id"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "warehouse_id"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "ordered_qty"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "quantities"
+
+[[columns]]
+name = "received_qty"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "quantities"
+
+[[columns]]
+name = "eta_date"
+type = "DATE"
+sortable = true
+visible = true
+group = "timing"
+
+[[columns]]
+name = "status"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "status"

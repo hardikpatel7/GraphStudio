@@ -1,0 +1,61 @@
+id           = "dv_exception_alerts"
+display_name = "Exception Alerts"
+
+[source]
+source_id = "src_exception_alerts"
+
+[[columns]]
+name = "alert_type"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "severity"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "sku_code"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "product_name"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "identity"
+
+[[columns]]
+name = "dark_store_id"
+type = "VARCHAR"
+sortable = true
+visible = true
+group = "location"
+
+[[columns]]
+name = "available_units"
+type = "INTEGER"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "days_of_supply"
+type = "DOUBLE"
+sortable = true
+visible = true
+group = "position"
+
+[[columns]]
+name = "alert_message"
+type = "VARCHAR"
+sortable = false
+visible = true
+group = "detail"

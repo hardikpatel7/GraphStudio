@@ -1,0 +1,66 @@
+# Bolt Basket product × location hierarchy graph.
+# Spine: category → subcategory → brand → sku (product dimension)
+# Location bridge: service_zone → dark_store
+# Metrics: on_hand, available, daily_velocity, days_of_supply, fill_rate
+
+id           = "boltbasket-inventory-graph"
+display_name = "Bolt Basket Inventory Graph"
+source_id    = "src_store_positions"
+
+[spine]
+kind_order = ["category_l1", "category_l2", "brand", "sku_code"]
+
+[hierarchy.category_l1]
+display_name = "Department"
+key_column   = "category_l1"
+
+[hierarchy.category_l2]
+display_name = "Category"
+key_column   = "category_l2"
+parent       = "category_l1"
+
+[hierarchy.brand]
+display_name = "Brand"
+key_column   = "brand"
+parent       = "category_l2"
+
+[hierarchy.sku_code]
+display_name = "SKU"
+key_column   = "sku_code"
+parent       = "brand"
+
+[bridge.dark_store]
+display_name     = "Dark Store"
+key_column       = "dark_store_id"
+name_column      = "dark_store_name"
+join_key_on_spine = "sku_code"
+
+[bridge.service_zone]
+display_name = "Service Zone"
+key_column   = "service_zone"
+parent       = "dark_store"
+
+[metrics.on_hand_units]
+display_name = "On Hand"
+column       = "on_hand_units"
+aggregate    = "sum"
+
+[metrics.available_units]
+display_name = "Available"
+column       = "available_units"
+aggregate    = "sum"
+
+[metrics.daily_velocity]
+display_name = "Daily Velocity"
+column       = "daily_velocity"
+aggregate    = "avg"
+
+[metrics.days_of_supply]
+display_name = "Days of Supply"
+column       = "days_of_supply"
+aggregate    = "avg"
+
+[metrics.fill_rate_pct]
+display_name = "Fill Rate %"
+column       = "fill_rate_pct"
+aggregate    = "avg"
