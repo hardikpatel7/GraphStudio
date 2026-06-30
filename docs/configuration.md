@@ -31,8 +31,8 @@ Code: `server/src/instance_config.rs::discover()`.
 ```toml
 home_path   = "/srv"               # absolute path; tenant_root resolves under here
 environment = "prod"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 ```
 
 That's it. Server picks defaults for everything else (HTTP port 3001, no gRPC
@@ -47,8 +47,8 @@ services, paths under `home_path/smartstudio/{tenant_id}/data/`).
 | Field | Type | Description |
 |---|---|---|
 | `home_path` | string | **Absolute path** to the directory under which the `smartstudio/{tenant_id}/data/` tree lives by default. Also the search anchor for relative overrides in `[paths]`. Must exist; the server will not create it. |
-| `client` | string | Tenant client name (e.g. `bealls`). Part of `tenant_id`. |
-| `app_type` | string | App family (e.g. `inventorysmart`). Part of `tenant_id`. |
+| `client` | string | Tenant client name (e.g. `boltbasket`). Part of `tenant_id`. |
+| `app_type` | string | App family (e.g. `darkstoredash`). Part of `tenant_id`. |
 | `environment` | string | Environment label (`dev`, `uat`, `prod`, …). Part of `tenant_id`. |
 
 `tenant_id` is computed as `{client}-{app_type}-{environment}`.
@@ -155,8 +155,8 @@ Remove (or set to `false`) before the next start.
 ```toml
 home_path   = "/path/to/your/data"
 environment = "dev"
-client      = "mycompany"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 
 [server]
 port      = 3002
@@ -167,7 +167,7 @@ enabled       = true
 port_override = 5433
 ```
 
-Resolves to `/path/to/your/data/smartstudio/mycompany-inventorysmart-dev/data/`,
+Resolves to `/path/to/your/data/smartstudio/boltbasket-darkstoredash-dev/data/`,
 HTTP on 3002, gRPC on 50051, RCL service ON pointing at PG on port 5433.
 
 ### 6.2 Production: tenant data on a dedicated SSD
@@ -178,8 +178,8 @@ else (the `smartstudio/` namespace anchor) at the default:
 ```toml
 home_path   = "/srv"
 environment = "prod"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 
 [server]
 port = 3001
@@ -188,25 +188,25 @@ port = 3001
 enabled = true
 
 [paths]
-data_dir = "/local-ssd/bealls-inventorysmart-prod"
+data_dir = "/local-ssd/boltbasket-darkstoredash-prod"
 ```
 
 `db_path`, `duckdb_path`, `log_db_path`, `parquet_home`, `traces_dir` all
-cascade under `/local-ssd/bealls-inventorysmart-prod/`.
+cascade under `/local-ssd/boltbasket-darkstoredash-prod/`.
 
 ### 6.3 Production: parquet on a shared lake, DuckDB on local SSD, metadata on root volume
 
 ```toml
 home_path   = "/srv"
 environment = "prod"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 
 [paths]
-parquet_home = "/mnt/datalake/bealls/parquet"
-duckdb_path  = "/local-ssd/bealls/tenant_data.duckdb"
+parquet_home = "/mnt/datalake/boltbasket/parquet"
+duckdb_path  = "/local-ssd/boltbasket/tenant_data.duckdb"
 # db_path, log_db_path, traces_dir are unset → fall back to defaults under
-# /srv/smartstudio/bealls-inventorysmart-prod/data/
+# /srv/smartstudio/boltbasket-darkstoredash-prod/data/
 ```
 
 ### 6.4 Relative override (per-env switch via `home_path` only)
@@ -214,12 +214,12 @@ duckdb_path  = "/local-ssd/bealls/tenant_data.duckdb"
 ```toml
 home_path   = "/srv-prod"        # change to /srv-uat for UAT, /srv-dev for dev
 environment = "prod"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 
 [paths]
-parquet_home = "shared-data/bealls/parquet"
-# Absolute path becomes /srv-prod/shared-data/bealls/parquet
+parquet_home = "shared-data/boltbasket/parquet"
+# Absolute path becomes /srv-prod/shared-data/boltbasket/parquet
 # Swapping home_path retargets it automatically.
 ```
 
@@ -279,9 +279,9 @@ Set them only if you use that step type.
 {
   "status": "ok",
   "config": {
-    "tenant_id": "bealls-inventorysmart-dev",
-    "client": "bealls",
-    "app_type": "inventorysmart",
+    "tenant_id": "boltbasket-darkstoredash-dev",
+    "client": "boltbasket",
+    "app_type": "darkstoredash",
     "environment": "dev",
     "db_path": "/Users/.../smartstudio.db",
     "duckdb_path": "/Users/.../tenant_data.duckdb",
@@ -323,8 +323,7 @@ These are **not** overridable from the TOML, on purpose:
   because the three components show up independently in logs, gRPC tags,
   and folder names. Override `data_dir` if you want to break the implicit
   folder convention.
-- **The `smartstudio/` namespace anchor**. Only meaningful as part of the
-  default `data_dir` derivation. Override `data_dir` and you bypass it.
+- **The `smartstudio/` namespace anchor**. Internal directory namespace; not overridable.
 - **Discovery search paths** for `environment.toml`. The three locations
   (exe-relative, exe, cwd) are hard-coded — operators control which file
   the server picks via where they place it, not via flags.

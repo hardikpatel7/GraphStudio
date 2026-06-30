@@ -38,10 +38,10 @@ Each running instance is **one tenant** — one `(client, app_type, environment)
 GraphStudio derives a tenant ID from three fields in `environment.toml`:
 
 ```toml
-client      = "briscoes"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 environment = "demo"
-# → tenant ID: briscoes-inventorysmart-demo
+# → tenant ID: boltbasket-darkstoredash-demo
 ```
 
 This ID determines:
@@ -49,7 +49,7 @@ This ID determines:
 - The **display name** shown in the UI header
 - The **SQLite metadata DB**: `smartstudio.db` inside that directory
 
-The currently running tenant (`briscoes-inventorysmart-demo`) already has data. To start fresh, you create a new identity — existing data is never touched.
+The currently running tenant (`boltbasket-darkstoredash-demo`) already has data. To start fresh, you create a new identity — existing data is never touched.
 
 ---
 
