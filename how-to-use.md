@@ -62,7 +62,7 @@ Open `environment.toml` in the repo root and change the three identity fields to
 ```toml
 home_path   = "/Users/yourname/Documents/graphstudio-data"
 client      = "mycompany"
-app_type    = "inventorysmart"
+app_type    = "myapp"
 environment = "dev"
 is_new      = true    # ← tells the server to bootstrap a fresh DB on first boot
 ```
@@ -71,7 +71,7 @@ Also comment out `default_id` under `[graphs]` (it references the old tenant's g
 
 ```toml
 [graphs]
-# default_id = "briscoes-inventory-graph"
+# default_id = "boltbasket-inventory-graph"
 ```
 
 And disable RCL if you don't have a live PG replication source:
@@ -88,7 +88,7 @@ npm run dev
 ```
 
 On first boot with `is_new = true`, the server:
-- Creates the directory `<home_path>/smartstudio/mycompany-inventorysmart-dev/data/`
+- Creates the directory `<home_path>/smartstudio/mycompany-myapp-dev/data/`
 - Bootstraps an empty `smartstudio.db` (all tables present, zero rows)
 - Seeds any starter templates from `data/`
 
@@ -230,7 +230,7 @@ GraphStudio has no multi-tenant UI — switching tenants means changing `environ
 ```toml
 # environment.toml
 client      = "acme"
-app_type    = "inventorysmart"
+app_type    = "myapp"
 environment = "staging"
 is_new      = false   # false if the tenant already exists
 ```
@@ -316,7 +316,7 @@ In production, the Rust server serves the built `dist/` as static files in addit
 # Required — tenant identity
 home_path   = "/path/to/data/root"
 client      = "mycompany"
-app_type    = "inventorysmart"
+app_type    = "myapp"
 environment = "dev"
 is_new      = false   # set true only on first boot of a new tenant
 
