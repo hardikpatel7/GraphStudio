@@ -1,66 +1,52 @@
-# Bolt Basket product × location hierarchy graph.
-# Spine: category → subcategory → brand → sku (product dimension)
-# Location bridge: service_zone → dark_store
-# Metrics: on_hand, available, daily_velocity, days_of_supply, fill_rate
+# Bolt Basket dark-store inventory graph.
+# Spine: category → subcategory → brand → SKU (product dimension)
+# Metrics: on-hand, available, daily velocity, days of supply, fill rate
+#
+# This file is the starter template copied into a fresh tenant's
+# `<data_dir>/graphs/` on bootstrap. Operators can rename the id /
+# edit fields per-tenant; the file lives in the tenant data dir from
+# that point on.
 
 id           = "boltbasket-inventory-graph"
 display_name = "Bolt Basket Inventory Graph"
-source_id    = "src_store_positions"
 
-[spine]
-kind_order = ["category_l1", "category_l2", "brand", "sku_code"]
+# ─── Sources ────────────────────────────────────────────────────────────
 
-[hierarchy.category_l1]
-display_name = "Department"
-key_column   = "category_l1"
+# Primary spine + metrics source. v_store_positions is a per-SKU view
+# that includes both the product hierarchy columns (category_l1/l2,
+# brand, sku_code) and the position/performance metrics (on_hand_units,
+# available_units, daily_velocity, days_of_supply, fill_rate_pct).
+[[sources]]
+alias       = "store_positions"
+table       = "v_store_positions"
+attaches_at = "sku_code"
 
-[hierarchy.category_l2]
-display_name = "Category"
-key_column   = "category_l2"
-parent       = "category_l1"
+# ─── Product hierarchy (primary) ────────────────────────────────────────
+#
+# Top-to-leaf order is declaration order — the engine relies on
+# `toml`'s `preserve_order` feature to walk `[hierarchy.product.<level>]`
+# blocks in the same sequence they appear here.
 
-[hierarchy.brand]
-display_name = "Brand"
-key_column   = "brand"
-parent       = "category_l2"
+[hierarchy.product]
+source = "store_positions"
 
-[hierarchy.sku_code]
-display_name = "SKU"
-key_column   = "sku_code"
-parent       = "brand"
+[hierarchy.product.category_l1]
+column = "category_l1"
 
-[bridge.dark_store]
-display_name     = "Dark Store"
-key_column       = "dark_store_id"
-name_column      = "dark_store_name"
-join_key_on_spine = "sku_code"
+[hierarchy.product.category_l2]
+column = "category_l2"
 
-[bridge.service_zone]
-display_name = "Service Zone"
-key_column   = "service_zone"
-parent       = "dark_store"
+[hierarchy.product.brand]
+column = "brand"
 
-[metrics.on_hand_units]
-display_name = "On Hand"
-column       = "on_hand_units"
-aggregate    = "sum"
+[hierarchy.product.sku_code]
+column = "sku_code"
 
-[metrics.available_units]
-display_name = "Available"
-column       = "available_units"
-aggregate    = "sum"
+# ─── Metrics ────────────────────────────────────────────────────────────
 
-[metrics.daily_velocity]
-display_name = "Daily Velocity"
-column       = "daily_velocity"
-aggregate    = "avg"
-
-[metrics.days_of_supply]
-display_name = "Days of Supply"
-column       = "days_of_supply"
-aggregate    = "avg"
-
-[metrics.fill_rate_pct]
-display_name = "Fill Rate %"
-column       = "fill_rate_pct"
-aggregate    = "avg"
+[metrics.store_positions]
+on_hand_units   = { rollup = "sum" }
+available_units = { rollup = "sum" }
+daily_velocity  = { rollup = "avg" }
+days_of_supply  = { rollup = "avg" }
+fill_rate_pct   = { rollup = "avg" }
