@@ -71,4 +71,3 @@ SMARTSTUDIO_URL=http://localhost:3001 npm run dev          # stdio
 MCP_AUTH_TOKEN=$(openssl rand -hex 32) \
 SMARTSTUDIO_URL=http://localhost:3001 npm run dev:http     # HTTP on :3101
 ```
-```
