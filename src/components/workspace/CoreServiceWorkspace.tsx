@@ -15,22 +15,22 @@ interface RpcDef {
 
 const RCL_RPCS: RpcDef[] = [
   {
-    name: "ResolveDcStorePolicy",
-    description: "Determines which DCs can ship to which stores based on DC-store allocation policies, transportation zones, and capacity constraints.",
-    input: "DcStorePolicyRequest { product_ids, store_ids, dc_ids, policy_overrides }",
-    output: "DcStorePolicyResponse { allocations: [{ dc_id, store_id, eligible, reason }] }",
+    name: "ResolveStoreEligibility",
+    description: "Determines which dark stores are eligible to fulfil orders for a given SKU, based on delivery type, stocking rules, and zone coverage.",
+    input: "StoreEligibilityRequest { sku_codes, dark_store_ids, delivery_type, zone_id }",
+    output: "StoreEligibilityResponse { eligibility: [{ sku_code, dark_store_id, eligible, reason }] }",
   },
   {
-    name: "ResolvePsm",
-    description: "Resolves Product-Store-Matrix eligibility. Evaluates product status, store status, planogram flags, and exclusion rules to determine which products are valid for which stores.",
-    input: "PsmRequest { product_ids, store_ids, include_inactive, as_of_date }",
-    output: "PsmResponse { matrix: [{ product_id, store_id, eligible, flags }] }",
+    name: "ResolveReplenishmentRules",
+    description: "Resolves replenishment configuration for a SKU × dark store pair — min/max stock levels, reorder quantity, and lead time from the assigned warehouse.",
+    input: "ReplenishmentRequest { sku_codes, dark_store_ids, include_inactive, as_of_date }",
+    output: "ReplenishmentResponse { rules: [{ sku_code, dark_store_id, min_stock, max_stock, reorder_qty, lead_time_hours }] }",
   },
   {
-    name: "ResolveConstraints",
-    description: "Applies allocation constraints including min/max quantities, pack rounding, RCL (Receiving Capacity Limits), and store-level caps. Returns constrained allocation quantities.",
-    input: "ConstraintRequest { allocations, constraint_set_id, rcl_overrides }",
-    output: "ConstraintResponse { constrained: [{ product_id, store_id, qty, applied_rules }] }",
+    name: "ResolveDeliveryConstraints",
+    description: "Applies fulfilment constraints: cold-chain requirements, delivery unit rounding, maximum order quantity, and service zone restrictions.",
+    input: "DeliveryConstraintRequest { allocations, constraint_set_id, zone_overrides }",
+    output: "DeliveryConstraintResponse { constrained: [{ sku_code, dark_store_id, qty, applied_rules }] }",
   },
 ];
 
@@ -65,7 +65,7 @@ export function CoreServiceWorkspace({ serviceId }: CoreServiceWorkspaceProps) {
           </span>
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          {isRcl && "RCL resolution gRPC service for allocation constraint evaluation"}
+          {isRcl && "Configurations service gRPC service for fulfilment configuration evaluation"}
           {isCrossFilter && "Cross-filter coordination service for multi-DataView filter sync"}
           {!isRcl && !isCrossFilter && `Core service: ${serviceId}`}
         </p>
@@ -154,10 +154,10 @@ export function CoreServiceWorkspace({ serviceId }: CoreServiceWorkspaceProps) {
           </div>
         </div>
 
-        {/* Live RCL Explorer — only for the rcl-resolution service.
-            Backed by the V8 article_graph: pick a product, see which
-            rule matched and the resolved payload (constraint rows
-            with min/max, default_store_groups, etc.). */}
+        {/* Fulfillment Config Explorer — only for the rcl-resolution service.
+            Configuration trace: pick a SKU, see which
+            fulfillment configurations matched and the resolved payload (constraint rows
+            with min/max, dark_store_ids, etc.). */}
         {isRcl && <RclExplorerPanel />}
 
         {/* Test Section */}
@@ -191,12 +191,12 @@ export function CoreServiceWorkspace({ serviceId }: CoreServiceWorkspaceProps) {
   );
 }
 
-/// Live RCL trace panel. Manual product picker; on Resolve, mounts a
+/// Fulfillment Config Explorer panel. Manual SKU picker; on Resolve, mounts a
 /// shared <RclTrace /> that self-fetches and renders the matched
 /// (rcl_code, rule_code) + payload for each resolution flavor.
 function RclExplorerPanel() {
-  const [keyType, setKeyType] = useState<"product_code" | "article">("product_code");
-  const [keyValue, setKeyValue] = useState<string>("25516220");
+  const [keyType, setKeyType] = useState<"sku_code" | "dark_store_id">("sku_code");
+  const [keyValue, setKeyValue] = useState<string>("BB-SKU-001001");
   const [submitted, setSubmitted] = useState<{ product_code?: string; article?: string } | null>(
     null,
   );
@@ -204,25 +204,25 @@ function RclExplorerPanel() {
   const onResolve = () => {
     const v = keyValue.trim();
     if (!v) return;
-    setSubmitted(keyType === "product_code" ? { product_code: v } : { article: v });
+    setSubmitted(keyType === "sku_code" ? { product_code: v } : { article: v });
   };
 
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
         <Zap size={14} className="text-yellow-400" />
-        <h2 className="text-sm font-semibold text-gray-300">RCL Explorer</h2>
+        <h2 className="text-sm font-semibold text-gray-300">Fulfillment Config Explorer</h2>
         <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-900/30 text-yellow-400">live</span>
       </div>
       <div className="rounded border border-gray-800 bg-gray-900/30 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <select
             value={keyType}
-            onChange={(e) => setKeyType(e.target.value as "product_code" | "article")}
+            onChange={(e) => setKeyType(e.target.value as "sku_code" | "dark_store_id")}
             className="px-2 py-1.5 text-xs rounded bg-gray-800 border border-gray-700 text-gray-300 focus:outline-none focus:border-blue-500"
           >
-            <option value="product_code">product_code</option>
-            <option value="article">article</option>
+            <option value="sku_code">sku_code</option>
+            <option value="dark_store_id">dark_store_id</option>
           </select>
           <input
             type="text"
@@ -230,7 +230,7 @@ function RclExplorerPanel() {
             onChange={(e) => setKeyValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && keyValue.trim() && onResolve()}
             className="flex-1 px-3 py-1.5 text-xs rounded bg-gray-800 border border-gray-700 text-gray-200 focus:outline-none focus:border-blue-500 font-mono"
-            placeholder="25516220 or 106255118-1"
+            placeholder="BB-SKU-001001"
           />
           <button
             onClick={onResolve}
