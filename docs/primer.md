@@ -1,6 +1,6 @@
 # SmartStudio — A Primer
 
-**SmartStudio is a metadata-driven app generation platform.** A single SmartStudio instance hosts one tenant — one client × one app type × one environment (e.g. "bealls × inventorysmart × dev"). The platform captures the metadata that describes a tenant's data feeds, application surface, and contracts, and generates the runtime artifacts (Rust gRPC services, React frontends, supporting code) that implement them.
+**SmartStudio is a metadata-driven app generation platform.** A single SmartStudio instance hosts one tenant — one client × one app type × one environment (e.g. "boltbasket × darkstoredash × dev"). The platform captures the metadata that describes a tenant's data feeds, application surface, and contracts, and generates the runtime artifacts (Rust gRPC services, React frontends, supporting code) that implement them.
 
 This document is a top-to-bottom tour of the concepts you'll encounter while using or extending the platform.
 
@@ -48,8 +48,8 @@ SmartStudio ships as a single binary plus a `dist/` frontend. **Each running ins
 
 ```toml
 home_path   = "/home/karthick"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 environment = "dev"
 [server]
 port      = 3001
@@ -59,7 +59,7 @@ enabled       = true
 port_override = 5433
 ```
 
-The tenant id is `{client}-{app_type}-{environment}` (e.g., `bealls-inventorysmart-dev`). The instance's data lives at `<home_path>/smartstudio/<tenant_id>/data/`:
+The tenant id is `{client}-{app_type}-{environment}` (e.g., `boltbasket-darkstoredash-dev`). The instance's data lives at `<home_path>/smartstudio/<tenant_id>/data/`:
 
 | File / Dir | Role |
 |---|---|
@@ -299,7 +299,7 @@ Generated services include the per-DataView server (filter / sort / paginate / s
 
 - **RCL Resolution** — rule-configuration resolver for inventory pricing/allocation rules. Lives in the `rcl` crate (rust-shared-utils). Three unary RPCs (`ResolveDcPolicy`, `ResolveConstraints`, `ResolvePsm`) plus a server-streaming `Subscribe` that pushes fresh rule corpora when the underlying PG tables change. PG `LISTEN`/`NOTIFY` triggers feed the change detection.
 - **Cross-Filter** — filter-cascade coordination across DataViews (planned).
-- **Article Selection** — bealls-specific in-process Rust materializer for the inventory-smart article selection table. Not a pipeline; a custom runner that uses RCL resolution + parallel PG COPY + rayon assembly to produce one ~43K-row DuckDB table.
+- **Store Positions Pipeline** — tenant-specific business logic that populates the `store_positions` materialized table from source data. Seed your own via `data/sources/` and `data/dataviews/` TOML files.
 
 ---
 
@@ -353,7 +353,7 @@ Light + dark themes selectable from the top-right of the app. The active theme i
 
 This primer covers the **platform's concept layer**. The following are intentionally out of scope and deserve their own dedicated documents:
 
-- **Article Selection** — the bealls-specific inventory-smart article selection pipeline (multi-step extract from `mv_asv2_*` materialized views + RCL resolution + rayon assembly) and its dedicated DataView. It uses smartstudio's primitives (Connection, RCL service, DuckDB warehouse) but encodes tenant-specific business logic that doesn't belong in a platform primer. Future doc: `docs/article-selection.md`.
+- **Article Selection** — tenant-specific business logic for article/product selection and materialization. It uses smartstudio's primitives (Connection, RCL service, DuckDB warehouse) but encodes tenant-specific business logic that doesn't belong in a platform primer. Future doc: `docs/article-selection.md`.
 - **DataView + Filter + ViewPort refinement** — the next planning session covers refinements to dimension filtering, viewport semantics, and DataView contract. The current primer reflects today's shape; the refinement may shift this.
 
 ---
