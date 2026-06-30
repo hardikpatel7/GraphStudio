@@ -1,6 +1,6 @@
 # GraphStudio
 
-**Turn raw data into production-grade inventory intelligence — without writing a line of app code.**
+**Turn raw data into production-grade operational intelligence — without writing a line of app code.**
 
 GraphStudio is a metadata-driven platform that lets data engineers and app builders connect data sources, define pipelines, model knowledge graphs, and generate fully functional Rust gRPC services and React frontends — all from a single web UI. One platform, one configuration file, one tenant. Deploy it, describe your data, and get a running app.
 
@@ -8,7 +8,7 @@ GraphStudio is a metadata-driven platform that lets data engineers and app build
 
 ## Why GraphStudio?
 
-Retail inventory apps need the same things every time: a data layer, a pipeline that refreshes it, a hierarchy graph for roll-ups and cross-filters, and a UI surface that ties it all together. Building that stack by hand for each client takes months. GraphStudio makes it a configuration problem.
+Every operational app needs the same things: a way to model data, a way to transform it, and a way to configure business rules. GraphStudio gives you all three as configuration.
 
 - **Define once, generate always.** Describe your data model in the UI. GraphStudio generates the backend services and frontend components that implement it.
 - **Live or batch — your choice.** Query Postgres or BigQuery live on every read, materialise into DuckDB via pipelines, or stream WAL changes continuously. The data layer adapts to the source.
@@ -21,8 +21,8 @@ Retail inventory apps need the same things every time: a data layer, a pipeline 
 
 | Capability | What it does |
 |---|---|
-| **Inventory dashboards** | Live and materialised views of on-hand, sell-through, and allocation data by any hierarchy combination |
-| **Allocation configurators** | Rule-based allocation screens with dimension filters, cascading drill-downs, and editable targets |
+| **Operational dashboards** | Live data for any domain: inventory, orders, fulfilment, ratings — materialised or live-queried, by any hierarchy combination |
+| **Configuration surfaces** | Rule-driven management screens backed by your own data, with dimension filters, cascading drill-downs, and editable targets |
 | **Planning workspaces** | Multi-level merchandise plans surfaced through the same DataView → Component contract |
 | **Cross-filter analysis** | Filter one view by another across shared hierarchy dimensions — instantly, in-process |
 | **Exception management** | Flag, review, and resolve inventory exceptions at any graph level |
@@ -30,11 +30,23 @@ Retail inventory apps need the same things every time: a data layer, a pipeline 
 
 ---
 
+## Example — Bolt Basket (quick-commerce grocery delivery)
+
+Bolt Basket runs GraphStudio for their _Dark Store Inventory_ module with four sub-modules:
+**Store inventory positions** (SKU-level on-hand per dark store),
+**Distribution** (inbound replenishment orders),
+**Exception handling** (stockouts, low-stock, freshness alerts), and
+**Customer ratings** (per-store NPS and complaint tracking).
+Bolt Basket replaced all InventorySmart-specific content with their own TOML templates
+following the same Source → Pipeline → DataView → Module pattern.
+
+---
+
 ## Core Concepts
 
 ### Tenant
 
-Each running GraphStudio instance is one **tenant** — one `(client, app_type, environment)` triple (e.g. `briscoes-inventorysmart-demo`). Identity is read from `environment.toml` at startup. All metadata and data for a tenant is fully isolated.
+Each running GraphStudio instance is one **tenant** — one `(client, app_type, environment)` triple (e.g. `boltbasket-darkstoredash-demo`). Identity is read from `environment.toml` at startup. All metadata and data for a tenant is fully isolated.
 
 ### Connection
 
