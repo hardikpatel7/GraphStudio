@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is GraphStudio?
 
-GraphStudio is a **metadata-driven platform** that configures and generates production-grade inventory management applications (InventorySmart) for retail clients. Each running instance is **one tenant** — one `(client, app_type, environment)` triple (e.g. `briscoes-inventorysmart-demo`). Identity is read from `environment.toml` at startup.
+GraphStudio is a **metadata-driven platform** that designs, configures, and generates production-grade operational applications for any domain. Each deployment targets a specific use case (e.g. quick-commerce inventory management, pricing analytics, customer operations) — all driven by the same Source → Pipeline → DataView → Module configuration model. Each running instance is **one tenant** — one `(client, app_type, environment)` triple (e.g. `boltbasket-darkstoredash-demo`). Identity is read from `environment.toml` at startup.
 
 The platform captures app metadata (DataViews, Sources, Pipelines, Dimensions, Modules) via a web UI and generates Rust gRPC services + React frontends for the generated app.
 
@@ -147,8 +147,8 @@ On startup the Rust server:
 `environment.toml` is the required boot config (one instance = one tenant). Key fields:
 ```toml
 home_path   = "/path/to/home"
-client      = "bealls"
-app_type    = "inventorysmart"
+client      = "boltbasket"
+app_type    = "darkstoredash"
 environment = "dev"
 is_new      = false   # set true on first boot of a NEW tenant — bootstraps empty SQLite schema; flip back to false after first successful start
 [server]
@@ -157,7 +157,7 @@ grpc_port = 50051
 [rcl]
 enabled = true
 [graphs]
-default_id = "bealls-inventory-graph"
+default_id = "boltbasket-inventory-graph"
 [agent]
 # gcp_project_id / llm_secret_name — omit for local dev; export API keys in shell instead
 ```
