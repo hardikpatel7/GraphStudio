@@ -1,41 +1,57 @@
-# SmartStudio Architecture
+# GraphStudio Architecture
 
-## What is SmartStudio?
+## What is GraphStudio?
 
-SmartStudio is a **metadata-driven platform that designs, configures, and generates production-grade inventory management applications**. It captures every aspect of an application — data models, UI layouts, data pipelines, filter configurations, and deployment settings — through a visual editor, then generates working Rust backend + React frontend code that runs as a standalone web application.
+GraphStudio is a **metadata-driven platform that designs, configures, and generates production-grade operational applications**. It captures every aspect of an application — data models, UI layouts, data pipelines, filter configurations, and deployment settings — through a visual editor, then generates working Rust backend + React frontend code that runs as a standalone web application.
 
-The primary consumer today is **InventorySmart**, a retail inventory management platform built with Rust (Axum) + React. SmartStudio generates and maintains the gRPC services, data pipelines, and UI modules that power InventorySmart.
+Each running instance is **one tenant** — one `(client, app_type, environment)` triple (e.g. `boltbasket-darkstoredash-demo`). Identity is read from `environment.toml` at startup.
 
-## The Problem SmartStudio Solves
+## The Problem GraphStudio Solves
 
-Building an inventory management application for a retail client involves:
+Operational applications — inventory dashboards, order management consoles, pricing configurators,
+fulfilment exception screens — share the same bones:
 
-1. **48+ DataViews** — each a server-side tabular dataset (article inventory, store inventory, allocation plans, PO details, configuration screens, reports) with unique columns, filters, sort rules, and refresh schedules
-2. **3+ Dimension hierarchies** — Product (8 levels: Banner → SKU), Store (6 levels: Banner → Store Code), DC (2 levels) — each with cascading filter rules
-3. **Per-DataView pipelines** — extract from PostgreSQL or BigQuery, materialize to Hive-partitioned Parquet, serve via DuckDB through gRPC
-4. **gRPC remote-cache services** — stateful ViewPort pattern where filtered/sorted/paginated results are cached server-side in DuckDB
-5. **Multiple environments** — dev, test, UAT, prod — each with different database credentials, GCS buckets, and parquet locations
-6. **Client-specific customization** — each retail client (Bealls, etc.) gets a tailored app with different dimensions, modules, and data sources
+- Connect to data sources (PG, DuckDB, ClickHouse, Parquet)
+- Transform and model data into domain-specific views
+- Expose configuration surfaces backed by business rules
+- Serve everything through a generated React + Rust API stack
 
-Doing this manually means writing thousands of lines of boilerplate Rust services, proto definitions, SQL queries, React components, filter configurations, and deployment configs — all tightly coupled and error-prone to maintain.
+Without a platform, each app is a one-off: hand-coded ETL, bespoke APIs, copy-pasted UI
+components that drift apart over time. GraphStudio replaces the hand-coding with
+configuration — DataViews, Sources, Pipelines, Graphs, and Modules defined in TOML —
+and generates the runtime from that configuration.
 
-SmartStudio replaces this with: **configure once in the UI, generate everywhere**.
+### Example: Bolt Basket Dark Store Inventory
 
-## How SmartStudio Helps the Target Web App
+Bolt Basket (a quick-commerce grocery delivery company) runs GraphStudio for their
+_Dark Store Inventory_ module. Four sub-modules cover their operations:
 
-### The Target: InventorySmart
+| Sub-module | What it shows |
+|---|---|
+| Store inventory positions | SKU-level on-hand, on-order, days of supply per dark store |
+| Distribution | Inbound replenishment orders from warehouse to dark stores |
+| Exception handling | Stockouts, low-stock alerts, freshness expiry warnings |
+| Customer ratings | Per-store NPS, complaint rate, recent delivery feedback |
 
-InventorySmart (`/bb/inventory-smart-rust/`) is a Rust (Axum) + React web application with:
+None of this is hardcoded. Bolt Basket authored TOML templates in `templates/boltbasket/`
+that seed their DataViews, Sources, DuckDB views, and graph hierarchy — the same pattern
+any new tenant follows.
+
+## How GraphStudio Helps the Target Web App
+
+### The Target: A Generated App
+
+GraphStudio generates a Rust (Axum) + React web application with:
 
 - **Axum API server** — serves REST endpoints to the React frontend
-- **Remote-cache service** — a separate gRPC server that loads Parquet files into DuckDB and serves filtered/sorted/paginated data via gRPC
-- **Remote-cache client** — a Rust crate that the Axum server uses to call the remote-cache gRPC service
+- **Configurations service (optional gRPC)** — a separate gRPC server that loads Parquet files into DuckDB and serves filtered/sorted/paginated data via gRPC
+- **gRPC client** — a Rust crate that the Axum server uses to call the configurations gRPC service
 - **React frontend** — modules, tabs, tables with cascading dimension filters
 
-### What SmartStudio Generates
+### What GraphStudio Generates
 
 ```
-SmartStudio                          InventorySmart
+GraphStudio                          Generated App
 ┌─────────────────────┐              ┌──────────────────────────────┐
 │                     │   generates  │                              │
 │  DataView metadata  │─────────────▸│  .proto files (per DataView) │
@@ -56,8 +72,8 @@ SmartStudio                          InventorySmart
 │                     │              │                              │
 │  Pipeline config    │   executes   │                              │
 │  - source (PG/BQ)   │─────────────▸│  Parquet files on disk/GCS   │
-│  - partitioning     │              │  (consumed by remote-cache)  │
-│  - refresh schedule │              │                              │
+│  - partitioning     │              │  (consumed by configurations │
+│  - refresh schedule │              │   service)                   │
 │                     │              │                              │
 │  Environment config │   generates  │  environment.{env}.toml      │
 │  - database creds   │─────────────▸│  GCP settings                │
@@ -67,14 +83,14 @@ SmartStudio                          InventorySmart
 
 ### The ViewPort Lifecycle (What Gets Generated)
 
-The core pattern SmartStudio enables:
+The core pattern GraphStudio enables:
 
-1. **User selects dimension filters** in the React UI (e.g., Division = "Mens", Store = "FL001")
+1. **User selects dimension filters** in the React UI (e.g., category_l1 = "Dairy", dark_store_id = "DS001")
 2. React calls the **Axum REST API** with filter payload
-3. Axum uses the **remote-cache client** (generated by SmartStudio) to call the gRPC service
-4. The **remote-cache gRPC service** (generated by SmartStudio):
+3. Axum uses the **configurations client** (generated by GraphStudio) to call the gRPC service
+4. The **configurations gRPC service** (generated by GraphStudio):
    - Reads Hive-partitioned Parquet files via DuckDB
-   - Applies dimension filters using generated SQL (from SmartStudio's column/dimension metadata)
+   - Applies dimension filters using generated SQL (from GraphStudio's column/dimension metadata)
    - Materializes the filtered result into a cached ViewPort
    - Returns paginated rows
 5. Subsequent sort/search/paginate operations hit the **cached ViewPort** (no recomputation)
@@ -84,7 +100,7 @@ The core pattern SmartStudio enables:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        SmartStudio                          │
+│                        GraphStudio                          │
 │                                                             │
 │  ┌──────────┐    ┌──────────────┐    ┌──────────────────┐   │
 │  │  React   │◀──▸│  Rust Axum   │◀──▸│  SQLite          │   │
@@ -115,24 +131,25 @@ The core pattern SmartStudio enables:
               │  generated code    │  generated config
               ▼                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    InventorySmart App                       │
+│                      Generated App                          │
 │                                                             │
 │  ┌──────────┐    ┌──────────────┐    ┌──────────────────┐   │
-│  │  React   │◀──▸│  Axum API    │◀──▸│  Remote-Cache    │   │
+│  │  React   │◀──▸│  Axum API    │◀──▸│  Configurations  │   │
 │  │  Frontend│    │  Server      │gRPC│  Service (gRPC)  │   │
-│  │          │    │              │    │                  │   │
-│  │  Generated:   │  Generated:  │    │  Generated:      │   │
-│  │  - Modules    │  - Handlers  │    │  - .proto files  │   │
-│  │  - Tables     │  - Client    │    │  - Service impl  │   │
-│  │  - Filters    │    code      │    │  - DuckDB queries│   │
-│  │  - Routes     │  - Repos     │    │  - Filter resolv.│   │
-│  └──────────┘    └──────────────┘    └──────────────────┘   │
+│  │          │    │              │    │  (optional)      │   │
+│  │  Generated:   │  Generated:  │    │                  │   │
+│  │  - Modules    │  - Handlers  │    │  Generated:      │   │
+│  │  - Tables     │  - Client    │    │  - .proto files  │   │
+│  │  - Filters    │    code      │    │  - Service impl  │   │
+│  │  - Routes     │  - Repos     │    │  - DuckDB queries│   │
+│  └──────────┘    └──────────────┘    │  - Filter resolv.│   │
+│                                      └──────────────────┘   │
 │                                             │               │
 │                                      ┌──────▼──────┐        │
 │                                      │  Parquet    │        │
 │                                      │  Files      │        │
 │                                      │  (from      │        │
-│                                      │  SmartStudio│        │
+│                                      │  GraphStudio│        │
 │                                      │  pipeline)  │        │
 │                                      └─────────────┘        │
 └─────────────────────────────────────────────────────────────┘
@@ -143,12 +160,12 @@ The core pattern SmartStudio enables:
 ### Client → AppType → Environment → Tenant
 
 ```
-Client: "Bealls"
-  └─ AppType: "InventorySmart"
-       ├─ Environment: "dev"   → Tenant ID: bealls-inventorysmart-dev
-       ├─ Environment: "test"  → Tenant ID: bealls-inventorysmart-test
-       ├─ Environment: "uat"   → Tenant ID: bealls-inventorysmart-uat
-       └─ Environment: "prod"  → Tenant ID: bealls-inventorysmart-prod
+Client: "boltbasket"
+  └─ AppType: "darkstoredash"
+       ├─ Environment: "dev"   → Tenant ID: boltbasket-darkstoredash-dev
+       ├─ Environment: "test"  → Tenant ID: boltbasket-darkstoredash-test
+       ├─ Environment: "uat"   → Tenant ID: boltbasket-darkstoredash-uat
+       └─ Environment: "prod"  → Tenant ID: boltbasket-darkstoredash-prod
 ```
 
 Each environment has:
@@ -162,22 +179,23 @@ Each environment has:
 A DataView is a **server-side tabular dataset** that defines everything needed to generate a working data service:
 
 ```
-DataView: "article_inventory_view"
+DataView: "store_positions"
 │
-├─ columns (41 columns)
-│   ├─ article    VARCHAR  sortable, searchable, visible
-│   ├─ l5_name    VARCHAR  searchable, visible (Style Description)
-│   ├─ oh         INTEGER  sortable, visible (On Hand)
-│   ├─ wos_oh     NUMERIC  sortable, visible (Weeks of Supply)
+├─ columns
+│   ├─ sku_code         VARCHAR  sortable, searchable, visible
+│   ├─ product_name     VARCHAR  searchable, visible
+│   ├─ dark_store_id    VARCHAR  sortable, visible
+│   ├─ on_hand_units    INTEGER  sortable, visible (On Hand)
+│   ├─ days_of_supply   NUMERIC  sortable, visible (Days of Supply)
 │   └─ ...
 │
 ├─ dimensions (which filters apply)
-│   ├─ store:   target_level=store_code, mandatory=[channel]
-│   └─ product: target_level=article,    mandatory=[l1_name]
+│   ├─ location: target_level=dark_store_id, mandatory=[delivery_type]
+│   └─ product:  target_level=sku_code,      mandatory=[category_l1]
 │
 ├─ contract (gRPC service binding)
-│   ├─ grpc_service: "article_inventory"
-│   ├─ grpc_method: "list_article_inventory"
+│   ├─ grpc_service: "store_positions"
+│   ├─ grpc_method: "list_store_positions"
 │   └─ viewport:
 │       ├─ engine: "duckdb"
 │       ├─ cache_strategy: "remote_grpc"
@@ -187,38 +205,37 @@ DataView: "article_inventory_view"
 ├─ backend_workflow (ETL pipeline)
 │   ├─ source:
 │   │   ├─ type: "pg_sp"
-│   │   ├─ sp_name: "inventory_smart.details_metric"
-│   │   └─ query: "WITH aid AS (SELECT * FROM ...) SELECT ..."
+│   │   ├─ sp_name: "darkstoredash.store_positions_metric"
+│   │   └─ query: "WITH sp AS (SELECT * FROM ...) SELECT ..."
 │   │
 │   ├─ parquet:
-│   │   ├─ path: "article_inventory"  (relative — resolved via env settings)
-│   │   ├─ partition_by: ["store_code"]
+│   │   ├─ path: "store_positions"  (relative — resolved via env settings)
+│   │   ├─ partition_by: ["dark_store_id"]
 │   │   ├─ strategy: "direct"  (or "two_step" for BQ sources)
 │   │   └─ refresh: { mode: "cdc", schedule: "0 */4 * * *",
 │   │                  cdc: { tracking_column: "updated_at",
-│   │                         merge_key: ["article", "store_code"] } }
+│   │                         merge_key: ["sku_code", "dark_store_id"] } }
 │   │
 │   └─ transform: (optional post-read steps)
-│       ├─ cte_aggregation: GROUP BY article, SUM(oh), AVG(wos_oh)
+│       ├─ cte_aggregation: GROUP BY sku_code, SUM(on_hand_units), AVG(days_of_supply)
 │       └─ distinct_passthrough: deduplicate hierarchy columns
 │
 └─ cascading_filters
-    └─ { trigger: "channel", affects: ["l1_name", "store_code"], type: "forward" }
+    └─ { trigger: "category_l1", affects: ["sku_code", "dark_store_id"], type: "forward" }
 ```
 
 ### Module → SubModule → Component (UI Hierarchy)
 
 ```
-Module: "Dashboard"              (sidebar menu item)
-├─ SubModule: "Article View"     (tab)
-│  ├─ Component: "Article Table" (table consuming article_inventory_view)
-│  └─ Component: "Details Popup" (popup consuming dashboard_details_popup_view)
-├─ SubModule: "Store View"       (tab)
-│  └─ Component: "Store Table"   (table consuming store_inventory_view)
-└─ SubModule: "Alerts"           (tab)
-   ├─ Component: "Stockout"      (table consuming dashboard_stockout_alerts_view)
-   ├─ Component: "Overstock"     (table consuming dashboard_overstock_alerts_view)
-   └─ Component: "Shortfall"     (table consuming dashboard_shortfall_alerts_view)
+Module: "Dark store Inventory dashboard and configuration"   (sidebar menu item)
+├─ SubModule: "Store inventory positions"   (tab)
+│  └─ Component: StorePositions.tsx         (table consuming store_positions)
+├─ SubModule: "Distribution"                (tab)
+│  └─ Component: DistributionOrders.tsx     (table consuming distribution_orders)
+├─ SubModule: "Exception handling"          (tab)
+│  └─ Component: ExceptionAlerts.tsx        (table consuming exception_alerts)
+└─ SubModule: "Customer ratings"            (tab)
+   └─ Component: CustomerRatings.tsx        (table consuming customer_ratings)
 ```
 
 ## Data Pipeline
@@ -228,7 +245,7 @@ Module: "Dashboard"              (sidebar menu item)
 **Strategy 1: Direct** (PG → Local Parquet)
 ```
 PostgreSQL ──DuckDB postgres_scanner──▸ Local Parquet (timestamped snapshot)
-                                        ../data/parquet/article_inventory/20260322_035613/
+                                        ../data/parquet/store_positions/20260322_035613/
 ```
 - Single step, fastest for development
 - DuckDB streams directly from PG to Parquet (no memory buffering)
@@ -237,10 +254,10 @@ PostgreSQL ──DuckDB postgres_scanner──▸ Local Parquet (timestamped sna
 **Strategy 2: Two-Step** (Source → GCS → Local)
 ```
 Step 1: BQ/PG ──▸ GCS Bucket (timestamped)
-                   gs://bealls-inventorysmart-dev/parquet/article_inventory/20260322_035613/
+                   gs://boltbasket-darkstoredash-dev/parquet/store_positions/20260322_035613/
 
 Step 2: GCS    ──▸ Local Parquet (timestamped)
-                   ../data/parquet/article_inventory/20260322_035613/
+                   ../data/parquet/store_positions/20260322_035613/
 ```
 - Two independent materialize buttons
 - GCS is the durable intermediary
@@ -256,22 +273,22 @@ Each materialization creates a **timestamped snapshot directory**:
 
 ### Parquet Path Resolution
 
-DataView paths are **relative** (e.g., `article_inventory`, `config/weeks_of_cover`). The actual location is resolved at runtime:
+DataView paths are **relative** (e.g., `store_positions`, `config/fulfillment_configurations`). The actual location is resolved at runtime:
 
-- **GCS**: `{GCS_BUCKET_ROOT}/article_inventory` → `gs://bealls-inventorysmart-dev/parquet/article_inventory`
-- **Local**: `{PARQUET_HOME}/article_inventory` → `../data/parquet/article_inventory`
+- **GCS**: `{GCS_BUCKET_ROOT}/store_positions` → `gs://boltbasket-darkstoredash-dev/parquet/store_positions`
+- **Local**: `{PARQUET_HOME}/store_positions` → `../data/parquet/store_positions`
 
 Both `GCS_BUCKET_ROOT` and `PARQUET_HOME` are environment-level settings, not duplicated per DataView.
 
 ## Configuration Management
 
-SmartStudio manages the target app's configuration through TOML files that follow the `app-config` crate pattern from `rust-shared-utils`:
+GraphStudio manages the target app's configuration through TOML files that follow the `app-config` crate pattern from `rust-shared-utils`:
 
 ### Three-Layer Override Model
 
 ```
 default.toml                          ← base defaults (shared across environments)
-{tenant}.{env}.toml                   ← environment-specific (bealls-inventorysmart.dev.toml)
+{tenant}.{env}.toml                   ← environment-specific (boltbasket-darkstoredash.dev.toml)
 local.toml                            ← local developer overrides (never committed)
 ```
 
@@ -298,7 +315,7 @@ Database credentials can be loaded from GCP Secret Manager using prefixed keys (
 
 ### Language Packs
 
-SmartStudio uses **Eta templates** organized into language packs:
+GraphStudio uses **Eta templates** organized into language packs:
 
 **Rust Backend** generates:
 - `.proto` files — gRPC service definitions per DataView
@@ -316,46 +333,48 @@ SmartStudio uses **Eta templates** organized into language packs:
 
 ### What Gets Generated Per DataView
 
-For a DataView like `article_inventory_view`, SmartStudio generates:
+For a DataView like `store_positions`, GraphStudio generates:
 
 ```
 Rust Backend:
-  src/article_inventory/
+  src/store_positions/
     mod.rs              ← gRPC service implementation
     metric.rs           ← Metric definition (columns, types, aggregations)
   proto/
-    article_inventory.proto  ← gRPC service + message definitions
+    store_positions.proto  ← gRPC service + message definitions
 
 React Frontend:
-  src/Modules/Dashboard/
-    services/articleInventoryService.ts    ← API client
-    constants/articleViewColumnConfig.ts   ← Column definitions
-    constants/articleViewFilterConfig.ts   ← Filter rules
-    types/articleInventory.ts             ← TypeScript interfaces
+  src/Modules/DarkStoreInventory/
+    services/storePositionsService.ts       ← API client
+    constants/storePositionsColumnConfig.ts ← Column definitions
+    constants/storePositionsFilterConfig.ts ← Filter rules
+    types/storePositions.ts                 ← TypeScript interfaces
 ```
 
 ## Technology Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| **SmartStudio Frontend** | React 19, Vite, Zustand, Tailwind, Lucide | Visual metadata editor |
-| **SmartStudio Backend** | Rust (Axum), SQLite, DuckDB, tokio-postgres | Metadata CRUD, pipeline execution, query engine |
+| **GraphStudio Frontend** | React 19, Vite, Zustand, Tailwind, Lucide | Visual metadata editor |
+| **GraphStudio Backend** | Rust (Axum), SQLite, DuckDB, tokio-postgres | Metadata CRUD, pipeline execution, query engine |
 | **Pipeline Engine** | DuckDB postgres_scanner | Bulk PG → Parquet streaming (no memory buffering) |
 | **Trace System** | DuckDB per-tenant + SSE broadcast | Real-time activity monitoring, error tracking |
 | **Code Generation** | Eta templates, language packs | Rust + React code generation |
 | **Config Management** | TOML files, three-layer override | Environment configuration |
-| **Target App** | Rust (Axum) + React + gRPC remote-cache | Generated inventory management application |
+| **Target App** | Rust (Axum) + React + Configurations service (optional gRPC) | Generated operational application |
 | **Target Data Layer** | DuckDB + Hive-partitioned Parquet | ViewPort queries on materialized data |
 | **Shared Utils** | rust-shared-utils (query_builder_types, pg, config, gcp) | Reusable Rust crates for generated code |
 
-## Seeded Example: Bealls InventorySmart
+## Example seed: Bolt Basket (darkstoredash tenant)
 
-The seed data (`node-server/seed-bealls.ts`) creates a complete Bealls inventory application:
+On first boot with `is_new = true`, the `templates/boltbasket/` TOML files are applied:
 
-- **3 dimensions**: Product (8 levels), Store (6 levels), DC (2 levels)
-- **8 modules**: Dashboard, Configuration, Constraints, Grouping, Finalize, Reports, VPA, CNA
-- **48 DataViews**: 37 PG queries, 9 PG stored procedures, 2 BQ exports; 39 CDC, 9 full refresh
-- **27 submodules** across all modules
-- **33 components** wired to DataViews
-- **4 filter configs**: dashboard + config, product + store
-- **Real SQL queries** derived from the production Rust backend, each producing parquet files that feed the remote-cache gRPC service
+| Resource | Count | Examples |
+|---|---|---|
+| Sources | 5 | `src_store_positions`, `src_distribution_orders`, `src_exception_alerts`, `src_customer_ratings`, `src_sku_catalog` |
+| DataViews | 5 | `dv_store_positions`, `dv_distribution_orders`, `dv_exception_alerts`, `dv_customer_ratings`, `dv_sku_catalog` |
+| DuckDB Views | 4 | `v_store_positions`, `v_distribution_orders`, `v_exception_alerts`, `v_customer_ratings` |
+| Graph | 1 | `boltbasket-inventory-graph` (category → subcategory → brand → sku hierarchy) |
+| Dimensions | 2 | Product (category/subcategory/brand/sku), Location (service_zone/dark_store) |
+| Modules | 1 | "Dark store Inventory dashboard and configuration" |
+| Sub-modules | 4 | Distribution, Exception handling, Customer ratings, Store inventory positions |
