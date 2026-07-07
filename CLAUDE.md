@@ -44,6 +44,12 @@ cd server && cargo test
 cd mcp-server && npm test
 ```
 
+**Intentional RED canaries** (pre-existing failures — do not fix):
+- `src/__tests__/AgentApp.canary.test.tsx` — expects "SmartStudio Agent" heading (flips GREEN in Task 14)
+- `src/__tests__/WorkspaceLayout.canary.test.tsx` — expects "SmartStudio" sidebar label (flips GREEN in Task 14)
+- `server/tests/test_template_canaries.rs::generated_proto_contains_smartstudio_comment` — expects legacy comment in generated .proto (flips GREEN in Task 13)
+- `server/tests/test_template_canaries.rs::generated_service_rs_contains_smartstudio_comment` — expects legacy comment in generated service.rs (flips GREEN in Task 13)
+
 The Rust server (`server/`) is built via Cargo; `npm run dev:server` wraps `cargo run --manifest-path server/Cargo.toml`. First build takes several minutes due to DuckDB and Tonic compilation.
 
 **MCP server** (separate package in `mcp-server/`):
