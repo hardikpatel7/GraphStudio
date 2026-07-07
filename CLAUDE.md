@@ -13,16 +13,16 @@ The platform captures app metadata (DataViews, Sources, Pipelines, Dimensions, M
 All commands run from `GraphStudio/` (the directory with `package.json`).
 
 ```bash
-# Start frontend (Vite, port 5173) + Rust server (port 3001) together
+# Start frontend (Vite, port 5173) + Rust server (port 3001) — both hot-reload on file changes
 npm run dev
 
 # Frontend only
 npm run dev:client
 
-# Rust server only (single run)
+# Rust server only — single run (no watch)
 npm run dev:server
 
-# Rust server with file-watch rebuild
+# Rust server with file-watch rebuild (standalone; already embedded in `npm run dev`)
 npm run dev:server:watch
 
 # Production build (TypeScript check + Vite bundle)
@@ -96,6 +96,9 @@ Key modules:
 | `pipeline/` | Pipeline execution (delegates to `pipeline` crate from rust-shared-utils) |
 | `agent/` | AI agent subsystem (LLM routing via Rig, usage metering, workspace/session SQLite) |
 | `services/` | Long-running background tasks: RCL gRPC (Tonic), pipeline scheduler, CDC auto-start, article-selection gRPC |
+| `cross_filter/` | Graph-backed cross-filter resolver — computes intersection of hierarchy filter payloads |
+| `uam/` | User Access Management — resolves per-user entitled filter sets from `global.user_access_hierarchy_mapping` in PG |
+| `query/` | SQL utilities (`sql_split`) used by query execution paths |
 
 **AppState** (defined in `app_state.rs`) is the single `Arc<AppState>` threaded through every handler. It holds live state that can't live in SQLite: the running graph snapshots (`ArcSwapOption`), active pipeline run, CDC manager, agent state, UAM store, etc.
 
@@ -175,7 +178,7 @@ For local dev, LLM keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) can be set via s
 
 ## MCP Server
 
-The `mcp-server/` package exposes GraphStudio's data layer to Claude Code via MCP tools (graph queries, DuckDB queries, DataView reads, etc.). See `mcp-server/README.md` and `docs/smartstudio-mcp-user-guide.md`.
+The `mcp-server/` package exposes GraphStudio's data layer to Claude Code via MCP tools (graph queries, DuckDB queries, DataView reads, etc.). See `mcp-server/README.md`. (`docs/smartstudio-mcp-user-guide.md` exists but contains legacy inventory-specific content.)
 
 When answering a question using graphstudio MCP tools, review the tool trace before composing the reply. File `mcp__graphstudio__submit_feedback` if: a graph tool couldn't answer something it should have been able to; a graph tool returned 404/400; multiple tool calls assembled what should have been one answer; or a partial/estimated answer was returned. Include `example_question` on every feedback entry. File before responding.
 

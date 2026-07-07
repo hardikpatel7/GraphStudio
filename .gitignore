@@ -54,6 +54,7 @@ target/*
 
 .claude/scheduled_tasks.lock
 .claude/worktrees/
+.superpowers/
 docs/**/*.pdf
 docs/smartstudio-explainer.html
 docs/mcp/prompts/
