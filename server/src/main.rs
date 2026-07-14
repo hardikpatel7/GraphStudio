@@ -158,6 +158,9 @@ async fn main() {
         default_graph_id: resolved.config.graphs.default_id.clone(),
         uam: Arc::new(uam::UamStore::new()),
         agent: agent_state,
+        cargo_runs: Arc::new(tokio::sync::Mutex::new(
+            graphstudio_server::proc_registry::ProcRegistry::new(),
+        )),
     });
 
     // DuckDB-view seed. Apply any `data/duckdb_views/*.sql` against the

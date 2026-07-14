@@ -11,6 +11,7 @@ pub mod instance_config;
 pub mod pg_pools;
 pub mod pipeline;
 pub mod pipeline_assemblies;
+pub mod proc_registry;
 pub mod query;
 pub mod router;
 pub mod seed;

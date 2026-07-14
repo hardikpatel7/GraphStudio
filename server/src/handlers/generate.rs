@@ -264,6 +264,7 @@ fn find_templates_dir() -> Result<String, String> {
 /// Runs a cargo command (check, build, run) in the specified working directory.
 /// Body: { "action": "check"|"build"|"run", "working_dir": "/abs/path" }
 pub async fn run_cargo(
+    State(state): State<Arc<AppState>>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
     let action = body["action"].as_str()
@@ -293,29 +294,35 @@ pub async fn run_cargo(
     // For "run", we start the process and return quickly with the PID.
     // For check/build, we wait for completion.
     if action == "run" {
-        // Kill any previously running service on the same dir (best-effort)
-        let _ = std::process::Command::new("pkill")
-            .args(["-f", &format!("target/debug/.*{}", dir.file_name().unwrap_or_default().to_string_lossy().replace('-', "."))])
-            .output();
+        // Terminate any previous run for this dir (best-effort). Portable
+        // replacement for the old `pkill -f "target/debug/.*<dir>"` — we kill
+        // the child we tracked rather than matching command lines.
+        state.cargo_runs.lock().await.kill_matching_dir(working_dir);
 
         let child = std::process::Command::new("cargo")
             .args(&cargo_args)
             .current_dir(working_dir)
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped())
+            // Discard output. Nothing reads these streams, and keeping the
+            // child alive in the registry with *piped* stdio would eventually
+            // block the service once the OS pipe buffer fills. `null()` is
+            // cross-platform and matches the old effect (output was never
+            // captured — the piped handles were dropped immediately).
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
             .spawn()
             .map_err(|e| err(500, &format!("Failed to spawn cargo run: {}", e)))?;
 
         let pid = child.id();
 
+        // Register before the liveness wait so `stop_cargo` can find it.
+        state.cargo_runs.lock().await.insert(working_dir.to_string(), child);
+
         // Give it a moment to start (or fail immediately)
         tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
 
-        // Check if process is still running
-        let status = std::process::Command::new("kill")
-            .args(["-0", &pid.to_string()])
-            .output();
-        let running = status.map(|s| s.status.success()).unwrap_or(false);
+        // Check if the process is still running — cross-platform `try_wait()`
+        // via the registry, replacing the Unix-only `kill -0 <pid>`.
+        let running = state.cargo_runs.lock().await.is_running(pid);
 
         return Ok(Json(json!({
             "action": "run",
@@ -361,20 +368,19 @@ pub async fn run_cargo(
 /// Kills a running cargo process by PID.
 /// Body: { "pid": 12345 }
 pub async fn stop_cargo(
+    State(state): State<Arc<AppState>>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
     let pid = body["pid"].as_u64()
         .ok_or_else(|| err(400, "Missing 'pid' field"))?;
 
-    let output = std::process::Command::new("kill")
-        .args([&pid.to_string()])
-        .output()
-        .map_err(|e| err(500, &format!("Failed to kill process: {}", e)))?;
-
-    let success = output.status.success();
+    // Kill via the tracked `Child` handle (cross-platform `Child::kill()`)
+    // instead of the Unix-only `kill <pid>`. Only processes we started are
+    // tracked, so an unknown/stale pid reports `killed: false`.
+    let killed = state.cargo_runs.lock().await.kill(pid as u32);
 
     Ok(Json(json!({
-        "killed": success,
+        "killed": killed,
         "pid": pid,
     })))
 }

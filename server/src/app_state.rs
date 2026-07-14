@@ -103,4 +103,11 @@ pub struct AppState {
     /// LRU cache for idempotent tool results, channel handle for the
     /// metering writer task). See `crate::agent::AgentState`.
     pub agent: Arc<crate::agent::AgentState>,
+    /// Generated-service child processes started by `POST /api/generate/cargo`
+    /// with `action = "run"`. Retained so stop and liveness checks use the
+    /// cross-platform `std::process::Child` API (`kill()` / `try_wait()`)
+    /// instead of shelling out to the Unix-only `kill`/`pkill` binaries —
+    /// this is what lets the code-gen run/stop feature work on Windows.
+    /// See `crate::proc_registry::ProcRegistry`.
+    pub cargo_runs: Arc<tokio::sync::Mutex<crate::proc_registry::ProcRegistry>>,
 }

@@ -81,6 +81,9 @@ enabled = false
         default_graph_id: None,
         uam: Arc::new(uam::UamStore::new()),
         agent: agent_state,
+        cargo_runs: Arc::new(tokio::sync::Mutex::new(
+            graphstudio_server::proc_registry::ProcRegistry::new(),
+        )),
     });
 
     let router = build_router(state);
