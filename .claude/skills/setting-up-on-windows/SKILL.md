@@ -52,9 +52,15 @@ Run all shell steps from the repo root — the `GraphStudio` folder that contain
 Enable long paths and define two helpers used throughout. Run the registry line
 in an **(elevated)** shell once:
 ```powershell
-# (elevated) allow >260-char paths for the native build
-New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' `
-  -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+# (elevated) allow >260-char paths for the native build, then read it back so a
+# non-elevated shell fails here instead of silently later during the build.
+try {
+  New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' `
+    -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+} catch { throw "Enabling long paths needs an ELEVATED PowerShell: $_" }
+$lp = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem').LongPathsEnabled
+if ($lp -ne 1) { throw "LongPathsEnabled is '$lp', expected 1 — run this in an elevated PowerShell." }
+"LongPathsEnabled=$lp"
 
 # Refresh PATH in the CURRENT session from the machine + user environment.
 # winget updates the stored PATH but not the live shell, so call this after installs.
@@ -93,9 +99,13 @@ component with `vswhere` (a directory check gives false positives and misses
 Community/Pro/Enterprise):
 ```powershell
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-$hasVC = (Test-Path $vswhere) -and (& $vswhere -latest -products * `
-  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath)
-if ($hasVC) { "MSVC C++ tools present: $hasVC" } else {
+# Keep the installation PATH (a string), don't coerce to a bool, so the message
+# below reports where the toolset is rather than just "True".
+$vcPath = if (Test-Path $vswhere) {
+  & $vswhere -latest -products * `
+    -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+} else { '' }
+if ($vcPath) { "MSVC C++ tools present: $vcPath" } else {
   winget install --id Microsoft.VisualStudio.2022.BuildTools -e --source winget `
     --accept-package-agreements --accept-source-agreements `
     --override "--wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"

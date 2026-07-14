@@ -78,9 +78,11 @@ command -v rustc >/dev/null 2>&1 && rustc --version || \
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 # Put cargo on PATH for this shell. `~/.cargo/env` only exists for a rustup
 # install — a Homebrew Rust puts cargo in the brew prefix instead, so guard the
-# source (unconditional sourcing errors when the file is absent).
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-[ -d "$HOME/.cargo/bin" ] && export PATH="$HOME/.cargo/bin:$PATH"
+# source (unconditional sourcing errors when the file is absent). Use explicit
+# `if` blocks so the step still exits 0 when neither path is present (safe to
+# paste into a `set -e` script).
+if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
+if [ -d "$HOME/.cargo/bin" ]; then export PATH="$HOME/.cargo/bin:$PATH"; fi
 ```
 
 ### 4. Node.js — auto
