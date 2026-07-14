@@ -10,6 +10,8 @@ The platform captures app metadata (DataViews, Sources, Pipelines, Dimensions, M
 
 ## Commands
 
+**Prerequisites** (beyond Rust + Node ≥ 20): `protoc` (Protocol Buffers compiler — required by `server/build.rs`/`tonic-build`, the build fails without it) and `cargo-watch` (used by `npm run dev`). Plus SSH access to the Bitbucket dep repo (see below). For a full first-time setup, run the platform skill: **`setting-up-on-macos`** or **`setting-up-on-windows`** (in `.claude/skills/`).
+
 All commands run from `GraphStudio/` (the directory with `package.json`).
 
 ```bash
@@ -181,6 +183,7 @@ For local dev, LLM keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) can be set via s
 4. **Pipeline serialization** — DuckDB doesn't allow concurrent write connections to the same file. `AppState.pipeline_run_lock` serializes all pipeline runs. Read-only queries (Live View, schema introspect) bypass this lock.
 5. **Route order** in `router.rs` — generic parameterized routes like `/pipelines/{id}` must be registered AFTER specific sub-routes like `/pipelines/cancel` and `/pipelines/active`, or Axum will match the literal strings as IDs.
 6. **`preserve_order` in TOML** — the `indexmap`-backed TOML deserializer is used specifically for graph specs so key insertion order is preserved (hierarchy level ordering, metric source ordering).
+7. **Cross-platform process management** — the code-gen run/stop feature (`handlers/generate.rs`) must NOT shell out to `kill`/`pkill`/`kill -0` (Unix-only). It tracks spawned `cargo run` children in `AppState.cargo_runs` (`proc_registry::ProcRegistry`) and uses the portable `std::process::Child` API (`kill()`/`try_wait()`). Keep child stdio as `Stdio::null()` — a retained child with unread `piped()` stdio deadlocks once the OS pipe buffer fills.
 
 ## MCP Server
 
@@ -193,3 +196,4 @@ When answering a question using graphstudio MCP tools, review the tool trace bef
 - **[how-to-use.md](how-to-use.md)** — first-time setup, blank-state walkthrough, tenant switching, troubleshooting
 - **[README.md](README.md)** — product overview, capabilities, data flow, quick start
 - **[docs/primer.md](docs/primer.md)** — deep-dive on every concept (Sources, Pipelines, DataViews, CDC, Graph, code generation)
+- **`.claude/skills/setting-up-on-macos`** / **`setting-up-on-windows`** — step-by-step environment setup runbooks (prerequisites, Bitbucket SSH, `environment.toml`, first build)
