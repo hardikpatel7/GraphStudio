@@ -473,7 +473,7 @@ pub async fn cdc_start(
     });
 
     let cdc_key = format!("source/{}/{}", tenant, id);
-    state.cdc_manager.start(cdc::CdcStartParams {
+    let start_result = state.cdc_manager.start(cdc::CdcStartParams {
         key: cdc_key,
         pg,
         slot: slot_name.clone(),
@@ -484,7 +484,18 @@ pub async fn cdc_start(
         pk_columns: primary_key,
         on_lsn_update,
         on_status_update,
-    }).await.map_err(|e| err(500, &e))?;
+    }).await;
+    if let Err(e) = start_result {
+        // CDC failed to start — roll back the optimistic 'streaming' status
+        // written above so the source is not left falsely marked as an active
+        // stream (this is the normal path in the scaffold build, where CDC is
+        // disabled, but it is also the correct behavior for any start failure).
+        let _ = state.db.execute(
+            "UPDATE sources SET status = 'failed', updated_at = datetime('now') WHERE id = ?1",
+            &[&id as &dyn rusqlite::types::ToSql],
+        );
+        return Err(err(500, &e));
+    }
 
     let elapsed = t0.elapsed().as_millis() as i64;
     log(&state, "cdc_start", "success",
