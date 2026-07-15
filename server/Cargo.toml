@@ -64,23 +64,31 @@ reqwest = { version = "0.12", features = ["json"] }
 connectorx = { version = "0.4", default-features = false, features = ["fptr", "src_postgres", "dst_arrow2"] }
 arrow2 = { version = "0.17", default-features = false, features = ["io_parquet", "io_parquet_zstd", "io_parquet_snappy"] }
 
-# Pipeline (lifted to rust-shared-utils, consumed via git)
-pipeline = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# Pipeline (lifted to rust-shared-utils). The real crate is private (SSH). The
+# public repo builds against an inert local scaffold stub (see server/stubs/).
+# To build against the real crate: comment the path line, restore the git line.
+# pipeline = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+pipeline = { path = "stubs/pipeline" }
 # PG connection pool. Used by smartstudio at boot to register one named
 # pool per row in the `connections` table; the pipeline crate then uses
 # `pg::get_named_connection(...)` for every COPY/extract.
-pg = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# pg = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+pg = { path = "stubs/pg" }
 # `pg::initialize_named_pool` takes an `app_config::database::DatabaseConfig`.
-app-config = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4", features = ["secret-manager"] }
+# app-config = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4", features = ["secret-manager"] }
+app-config = { path = "stubs/app-config", features = ["secret-manager"] }
 deadpool-postgres = "0.14"
 
 # RCL resolution (rust-shared-utils, consumed via git). Pure Rust crate;
 # the Tonic gRPC wrapper lives in this server (server/src/services/rcl_grpc.rs).
-rcl = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# rcl = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# Inert stub — carries NO rule-resolution algorithm (proprietary). Resolves to empty.
+rcl = { path = "stubs/rcl" }
 
 # CDC streaming (rust-shared-utils). PG WAL → DuckDB mirror runtime.
 # Lifted from the in-tree server/src/cdc/ (now removed); consumed via git.
-cdc = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# cdc = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+cdc = { path = "stubs/cdc" }
 
 # GCP Secret Manager (rust-shared-utils). The agent uses this at boot
 # to pull LLM API keys (OPENAI_API_KEY, ANTHROPIC_API_KEY) out of a
@@ -88,7 +96,8 @@ cdc = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", 
 # `openai::Client::from_env()` / `anthropic::Client::from_env()` then
 # pick them up. Configured via `[agent]` in environment.toml. Local
 # dev can leave that section unset and export the keys in the shell.
-secret_manager = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+# secret_manager = { git = "ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git", branch = "develop/dev-v4" }
+secret_manager = { path = "stubs/secret_manager" }
 
 # gRPC (Tonic server for the RCL service)
 tonic = "0.12"
@@ -129,10 +138,11 @@ tempfile = "3"
 [build-dependencies]
 tonic-build = "0.12"
 
-# # Local development override for the `pipeline` crate. Lets us iterate on
-# # `rust-shared-utils/pipeline` without a push round-trip. Remove (or comment
-# # out) before publishing — once the pipeline changes are pushed to
-# # `develop/dev-v4`, the git dep above will pick them up directly.
+# NOTE: this repo builds against the inert local scaffold stubs in `server/stubs/`
+# (the `path = "stubs/…"` deps above), so no `[patch]` is used. If you switch the
+# six deps back to their real `git = "ssh://…"` lines and want to iterate on a
+# local checkout of rust-shared-utils without a push round-trip, uncomment and
+# adjust the patch block below.
 # [patch."ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git"]
 # pipeline = { path = "../../rust-shared-utils/pipeline" }
 # pg = { path = "../../rust-shared-utils/pg" }

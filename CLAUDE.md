@@ -10,7 +10,7 @@ The platform captures app metadata (DataViews, Sources, Pipelines, Dimensions, M
 
 ## Commands
 
-**Prerequisites** (beyond Rust + Node ≥ 20): `protoc` (Protocol Buffers compiler — required by `server/build.rs`/`tonic-build`, the build fails without it) and `cargo-watch` (used by `npm run dev`). Plus SSH access to the Bitbucket dep repo (see below). For a full first-time setup, run the platform skill: **`setting-up-on-macos`** or **`setting-up-on-windows`** (in `.claude/skills/`).
+**Prerequisites** (beyond Rust + Node ≥ 20): `protoc` (Protocol Buffers compiler — required by `server/build.rs`/`tonic-build`, the build fails without it) and `cargo-watch` (used by `npm run dev`). The public repo builds against inert local scaffold stubs in `server/stubs/` (see below), so **no SSH/Bitbucket access is required** for a default build — that is only needed to build against the real private crates. For a full first-time setup, run the platform skill: **`setting-up-on-macos`** or **`setting-up-on-windows`** (in `.claude/skills/`).
 
 All commands run from `GraphStudio/` (the directory with `package.json`).
 
@@ -60,7 +60,18 @@ cd mcp-server && npm run dev        # stdio transport
 cd mcp-server && npm run dev:http   # HTTP transport
 ```
 
-**Rust dependencies** pull from Bitbucket via SSH (`ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git`, branch `develop/dev-v4`). SSH access to that repo is required to build. To use local overrides, uncomment the `[patch.]` block at the bottom of `server/Cargo.toml`.
+**Rust dependencies — scaffold stubs (default) vs. real crates.** Six crates
+(`pipeline`, `pg`, `app-config`, `rcl`, `cdc`, `secret_manager`) come from the
+private `rust-shared-utils` repo (`ssh://git@bitbucket.org:22/insideinsight/rust-shared-utils.git`,
+branch `develop/dev-v4`). The public repo does **not** build against them — it
+builds against **inert local scaffold stubs** in `server/stubs/`, wired as
+`path` deps in `server/Cargo.toml`. The server compiles and boots with no SSH
+and no proprietary code, but the features those crates back are **inert**: no
+pipeline execution, no live PG pools, no CDC streaming, no GCP secrets, and —
+critically — **`rcl` carries none of the rule-resolution algorithm** (it resolves
+to empty). See `server/stubs/README.md`. To build against the real crates,
+restore the commented `git = "ssh://…"` lines (and comment the `path = "stubs/…"`
+lines) in `server/Cargo.toml`, then ensure SSH access to the Bitbucket repo.
 
 ## Architecture
 
@@ -196,4 +207,5 @@ When answering a question using graphstudio MCP tools, review the tool trace bef
 - **[how-to-use.md](how-to-use.md)** — first-time setup, blank-state walkthrough, tenant switching, troubleshooting
 - **[README.md](README.md)** — product overview, capabilities, data flow, quick start
 - **[docs/primer.md](docs/primer.md)** — deep-dive on every concept (Sources, Pipelines, DataViews, CDC, Graph, code generation)
-- **`.claude/skills/setting-up-on-macos`** / **`setting-up-on-windows`** — step-by-step environment setup runbooks (prerequisites, Bitbucket SSH, `environment.toml`, first build)
+- **`.claude/skills/setting-up-on-macos`** / **`setting-up-on-windows`** — step-by-step environment setup runbooks (prerequisites, `environment.toml`, first build; Bitbucket SSH only for the real-crate build)
+- **[server/stubs/README.md](server/stubs/README.md)** — the inert scaffold stubs that let the public repo build without the private `rust-shared-utils` crates, and how to switch back to the real crates

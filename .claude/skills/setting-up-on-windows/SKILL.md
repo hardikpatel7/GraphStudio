@@ -29,7 +29,7 @@ a **🔴 GATE**.
 | winget missing | If `winget` isn't present it must be installed from the Microsoft Store ("App Installer") — a GUI action. This is a hard stop, not a warning. |
 | Visual Studio C++ Build Tools | Large install with a UAC prompt; the "Desktop development with C++" workload is required for Rust's MSVC linker. |
 | winget UAC prompts | Machine-wide installs raise a UAC elevation prompt to confirm. |
-| Bitbucket SSH access | The generated public key must be added to the user's Bitbucket account, **and** that account must be granted read access to the private `insideinsight/rust-shared-utils` repo. Nobody else can do this. |
+| Bitbucket SSH access *(optional)* | **Only for the real-crate build.** The default build uses the inert scaffold stubs in `server/stubs/` and needs no Bitbucket access — skip this gate. If you opt in: the generated public key must be added to the user's Bitbucket account, **and** that account granted read access to the private `insideinsight/rust-shared-utils` repo. Nobody else can do this. |
 | LLM API keys (optional) | Only if the AI agent subsystem is used; the user supplies their own secret. |
 
 ## ⚠️ Verification status
@@ -165,8 +165,12 @@ protobuf GitHub releases and add its `bin\` to `PATH`.
 if (cargo watch --version 2>$null) { cargo watch --version } else { cargo install cargo-watch }
 ```
 
-### 9. Bitbucket SSH access — 🔴 GATE if not authenticated
-Rust deps pull `insideinsight/rust-shared-utils` over SSH.
+### 9. Bitbucket SSH access — 🔵 OPTIONAL (real-crate build only)
+**Skip this step for a default build** — the repo builds against the inert
+scaffold stubs in `server/stubs/` with no Bitbucket access (see
+`server/stubs/README.md`). Do this only if you've switched `server/Cargo.toml`
+back to the real `git = "ssh://…"` crate lines, in which case Rust deps pull
+`insideinsight/rust-shared-utils` over SSH.
 
 **a.** Ensure the OpenSSH client exists (it's an *optional* Windows feature, not
 guaranteed). In an **(elevated)** shell if it needs installing:

@@ -1,0 +1,16 @@
+[package]
+name = "app-config"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "app_config"
+path = "src/lib.rs"
+
+# The server declares `features = ["secret-manager"]` on this dependency.
+# In the real crate that enables a GCP Secret Manager config loader; the
+# public scaffold stub needs no backend, so the feature is an accepted no-op.
+[features]
+secret-manager = []
+
+[dependencies]

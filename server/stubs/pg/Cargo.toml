@@ -1,0 +1,11 @@
+[package]
+name = "pg"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+# Must be the SAME crate the server imports as `app_config`, so the
+# `DatabaseConfig` type identity matches at the call site. Points at the
+# sibling stub (Cargo unifies it with the server's `stubs/app-config`).
+app-config = { path = "../app-config" }

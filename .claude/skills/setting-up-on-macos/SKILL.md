@@ -20,7 +20,7 @@ re-run the whole skill. Do NOT stop except at a **🔴 GATE**.
 |---|---|
 | Xcode Command Line Tools | `xcode-select --install` opens a GUI dialog — a human clicks "Install". |
 | Homebrew install | The installer prompts for the sudo password interactively. |
-| Bitbucket SSH access | The generated public key must be added to the user's Bitbucket account, **and** that account must be granted read access to the private `insideinsight/rust-shared-utils` repo. Nobody but the user/admin can do this. |
+| Bitbucket SSH access *(optional)* | **Only for the real-crate build.** The default build uses the inert scaffold stubs in `server/stubs/` and needs no Bitbucket access — skip this gate entirely. If you opt in: the generated public key must be added to the user's Bitbucket account, **and** that account granted read access to the private `insideinsight/rust-shared-utils` repo. Nobody but the user/admin can do this. |
 | LLM API keys (optional) | Only if the AI agent subsystem is used; the user supplies their own secret. |
 
 Everything else installs automatically without prompting.
@@ -109,10 +109,14 @@ command -v protoc >/dev/null 2>&1 && protoc --version || brew install protobuf
 cargo watch --version >/dev/null 2>&1 && cargo watch --version || cargo install cargo-watch
 ```
 
-### 7. Bitbucket SSH access — 🔴 GATE if not authenticated
-Rust deps pull `insideinsight/rust-shared-utils` over SSH. First enroll
-Bitbucket's host key so the non-interactive (`BatchMode`) test below can't fail
-on an unknown host on a fresh machine:
+### 7. Bitbucket SSH access — 🔵 OPTIONAL (real-crate build only)
+**Skip this step for a default build.** The repo builds against the inert
+scaffold stubs in `server/stubs/` with no Bitbucket access (see
+`server/stubs/README.md`). Do this only if you've switched `server/Cargo.toml`
+back to the real `git = "ssh://…"` crate lines. In that case, Rust deps pull
+`insideinsight/rust-shared-utils` over SSH. First enroll Bitbucket's host key so
+the non-interactive (`BatchMode`) test below can't fail on an unknown host on a
+fresh machine:
 ```bash
 mkdir -p ~/.ssh && chmod 700 ~/.ssh
 ssh-keygen -F bitbucket.org >/dev/null 2>&1 || ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts 2>/dev/null

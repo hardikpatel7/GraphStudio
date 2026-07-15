@@ -1,0 +1,7 @@
+[package]
+name = "cdc"
+version = "0.1.0"
+edition = "2021"
+
+# Inert stub — the entire surface the server uses is std-only.
+[dependencies]
