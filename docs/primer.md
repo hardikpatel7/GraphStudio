@@ -47,7 +47,7 @@ Three layers, with a small number of concepts each. The split is deliberate: dat
 SmartStudio ships as a single binary plus a `dist/` frontend. **Each running instance is one tenant.** Identity is read from a required `environment.toml` at startup:
 
 ```toml
-home_path   = "/home/REDACTED"
+home_path   = "/path/to/graphstudio-data"
 client      = "boltbasket"
 app_type    = "darkstoredash"
 environment = "dev"

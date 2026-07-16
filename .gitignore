@@ -54,6 +54,7 @@ target/*
 
 .claude/scheduled_tasks.lock
 .claude/worktrees/
+.claude/settings.local.json
 .superpowers/
 docs/**/*.pdf
 docs/smartstudio-explainer.html
